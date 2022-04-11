@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/track_base_background"/>
+    <corners android:radius="10dp"/>
+    <stroke android:color="@color/track_playing_background" android:width="1dp"/>
+</shape>
