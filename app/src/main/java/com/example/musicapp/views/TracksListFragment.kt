@@ -26,8 +26,6 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
     @Inject lateinit var adapter: TracksListAdapter
     private val viewModel: TrackListViewModel by viewModels()
 
-
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -67,7 +65,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
     private fun onPreviousButtonClicked() {
         binding.previousButton.setOnClickListener {
             viewModel.playPreviousTrack() //keep here or in xml onClick?
-            binding.playPauseButton.isSelected = true //duplicate or put in observe?
+            binding.playPauseButton.isSelected = true
         }
     }
 

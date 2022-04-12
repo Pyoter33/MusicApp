@@ -30,16 +30,14 @@ class TracksListAdapter @Inject constructor() :
         holder.bind(current)
     }
 
-    class TrackViewHolder(private val binding: ItemTrackBinding, private val listener: TrackClickListener) : RecyclerView.ViewHolder(
+    class TrackViewHolder(
+        private val binding: ItemTrackBinding,
+        private val listener: TrackClickListener
+    ) : RecyclerView.ViewHolder(
         binding.root
     ) {
         fun bind(currentTrack: Track) {
-            if(currentTrack.playing) {
-                binding.itemTrackLayout.setBackgroundResource(R.drawable.background_track_playing)
-            } else {
-                binding.itemTrackLayout.setBackgroundResource(R.drawable.background_track)
-            }
-
+            binding.itemTrackLayout.isSelected = currentTrack.playing
             binding.textTrackName.text = currentTrack.name
             binding.textTrackArtist.text = currentTrack.artist
             binding.textTrackLength.text = currentTrack.length
@@ -59,7 +57,6 @@ class TracksListAdapter @Inject constructor() :
 
             }
         }
-
     }
 }
 
@@ -73,6 +70,6 @@ class TrackDiffUtil : DiffUtil.ItemCallback<Track>() {
     }
 }
 
-interface TrackClickListener{
+interface TrackClickListener {
     fun onClick(currentTrack: Track, position: Int)
 }
