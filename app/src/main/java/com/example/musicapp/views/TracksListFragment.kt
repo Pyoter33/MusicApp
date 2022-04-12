@@ -1,7 +1,6 @@
 package com.example.musicapp.views
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -14,7 +13,7 @@ import com.example.musicapp.R
 import com.example.musicapp.adapters.TrackClickListener
 import com.example.musicapp.adapters.TracksListAdapter
 import com.example.musicapp.databinding.FragmentTracksListBinding
-import com.example.musicapp.models.Track
+import com.example.musicapp.models.UITrack
 import com.example.musicapp.viewmodels.TrackListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -39,14 +38,21 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
 
         binding.viewRecyclerTracks.adapter = adapter
         binding.viewRecyclerTracks.layoutManager = LinearLayoutManager(context)
-        binding.viewModel = viewModel
+        binding.currentTrack = viewModel.currentTrack
         binding.lifecycleOwner = this
-        adapter.submitList(viewModel.list)
-        adapter.setOnItemClickListener(this)
+
         onPlayPauseButtonClicked()
         onNextButtonClicked()
         onPreviousButtonClicked()
         observePositionToNotify()
+        observeUITrackList()
+    }
+
+    private fun observeUITrackList() {
+        viewModel.trackList.observe(viewLifecycleOwner) { list ->
+            adapter.submitList(list)
+            adapter.setOnItemClickListener(this)
+        }
     }
 
     private fun observePositionToNotify() {
@@ -64,7 +70,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
 
     private fun onPreviousButtonClicked() {
         binding.previousButton.setOnClickListener {
-            viewModel.playPreviousTrack() //keep here or in xml onClick?
+            viewModel.playPreviousTrack()
             binding.playPauseButton.isSelected = true
         }
     }
@@ -75,12 +81,12 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
         }
     }
 
-    override fun onClick(currentTrack: Track, position: Int) { //using interface or lambda?
-        if(!currentTrack.playing) {
+    override fun onClick(currentUITrack: UITrack, position: Int) {
+        if(!currentUITrack.isPlaying) {
             if(!binding.layoutTrackController.isVisible) {
                 binding.layoutTrackController.visibility = View.VISIBLE
             }
-            viewModel.updateTracks(currentTrack, position)
+            viewModel.updateTracks(currentUITrack, position)
             binding.playPauseButton.isSelected = true
         }
     }

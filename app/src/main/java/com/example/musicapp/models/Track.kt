@@ -1,3 +1,3 @@
 package com.example.musicapp.models
 
-data class Track(val id: Int, val name: String, val artist: String, val length: String, var playing: Boolean)
+data class Track(val id: Long, val name: String, val artist: String, val length: String, val path: String)

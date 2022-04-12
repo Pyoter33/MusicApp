@@ -5,15 +5,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicapp.R
 import com.example.musicapp.databinding.ItemTrackBinding
-import com.example.musicapp.models.Track
+import com.example.musicapp.models.UITrack
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
 class TracksListAdapter @Inject constructor() :
-    ListAdapter<Track, TracksListAdapter.TrackViewHolder>(TrackDiffUtil()) {
+    ListAdapter<UITrack, TracksListAdapter.TrackViewHolder>(TrackDiffUtil()) {
 
     private lateinit var onItemClickListener: TrackClickListener
 
@@ -36,14 +34,14 @@ class TracksListAdapter @Inject constructor() :
     ) : RecyclerView.ViewHolder(
         binding.root
     ) {
-        fun bind(currentTrack: Track) {
-            binding.itemTrackLayout.isSelected = currentTrack.playing
-            binding.textTrackName.text = currentTrack.name
-            binding.textTrackArtist.text = currentTrack.artist
-            binding.textTrackLength.text = currentTrack.length
+        fun bind(currentUITrack: UITrack) {
+            binding.itemTrackLayout.isSelected = currentUITrack.isPlaying
+            binding.textTrackName.text = currentUITrack.name
+            binding.textTrackArtist.text = currentUITrack.artist
+            binding.textTrackLength.text = currentUITrack.length
 
             binding.root.setOnClickListener {
-                listener.onClick(currentTrack, adapterPosition)
+                listener.onClick(currentUITrack, adapterPosition)
             }
         }
 
@@ -60,16 +58,16 @@ class TracksListAdapter @Inject constructor() :
     }
 }
 
-class TrackDiffUtil : DiffUtil.ItemCallback<Track>() {
-    override fun areItemsTheSame(oldItem: Track, newItem: Track): Boolean {
+class TrackDiffUtil : DiffUtil.ItemCallback<UITrack>() {
+    override fun areItemsTheSame(oldItem: UITrack, newItem: UITrack): Boolean {
         return oldItem == newItem
     }
 
-    override fun areContentsTheSame(oldItem: Track, newItem: Track): Boolean {
+    override fun areContentsTheSame(oldItem: UITrack, newItem: UITrack): Boolean {
         return oldItem.id == newItem.id
     }
 }
 
 interface TrackClickListener {
-    fun onClick(currentTrack: Track, position: Int)
+    fun onClick(currentUITrack: UITrack, position: Int)
 }

@@ -4,9 +4,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
+        <import type="androidx.lifecycle.LiveData"/>
+        <import type="com.example.musicapp.models.UITrack"/>
         <variable
-            name="viewModel"
-            type="com.example.musicapp.viewmodels.TrackListViewModel" />
+            name="currentTrack"
+            type="LiveData&lt;UITrack&gt;" />
 
     </data>
 
@@ -44,7 +46,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_marginTop="4dp"
-                android:text="@{viewModel.currentTrack.name}"
+                android:text="@{currentTrack.name}"
                 android:textSize="20sp"
                 app:layout_constraintBottom_toTopOf="@+id/textCurrentTrackArtist"
                 app:layout_constraintStart_toStartOf="parent"
@@ -58,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_marginBottom="2dp"
-                android:text="@{viewModel.currentTrack.artist}"
+                android:text="@{currentTrack.artist}"
                 android:textSize="18sp"
                 app:layout_constraintBottom_toTopOf="@+id/trackProgressIndicator"
                 app:layout_constraintStart_toStartOf="parent"
