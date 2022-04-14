@@ -5,13 +5,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicapp.models.UITrack
-import com.example.musicapp.usecases.TrackListUseCase
+import com.example.musicapp.usecases.TrackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class TrackListViewModel @Inject constructor(private val useCase: TrackListUseCase) : ViewModel() {
+class TrackListViewModel @Inject constructor(private val useCase: TrackUseCase) : ViewModel() {
 
     private val _trackList = MutableLiveData<List<UITrack>>()
     val trackList: LiveData<List<UITrack>> = _trackList
@@ -43,9 +43,10 @@ class TrackListViewModel @Inject constructor(private val useCase: TrackListUseCa
         currentUITrack.isPlaying = true
         _currentTrack.value = currentUITrack
         useCase.currentPosition = position
+        useCase.onTrackChanged(currentUITrack.path)
     }
 
-    fun playNextTrack() { //remain here or put in use case? how?
+    fun playNextTrack() { //leave here or put in use case? how?
         useCase.currentPosition?.let { currentPosition ->
             val newPosition = currentPosition + 1
             val list = trackList.value!!
@@ -63,5 +64,9 @@ class TrackListViewModel @Inject constructor(private val useCase: TrackListUseCa
                 updateTracks(list[newPosition], newPosition)
             }
         }
+    }
+
+    fun resumePauseTrack() {
+        useCase.onTrackResumedPaused()
     }
 }

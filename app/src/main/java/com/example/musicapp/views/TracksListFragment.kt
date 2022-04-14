@@ -41,7 +41,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
         binding.currentTrack = viewModel.currentTrack
         binding.lifecycleOwner = this
 
-        onPlayPauseButtonClicked()
+        onResumePauseButtonClicked()
         onNextButtonClicked()
         onPreviousButtonClicked()
         observePositionToNotify()
@@ -64,19 +64,20 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
     private fun onNextButtonClicked() {
         binding.nextButton.setOnClickListener {
             viewModel.playNextTrack()
-            binding.playPauseButton.isSelected = true
+            binding.resumePauseButton.isSelected = true
         }
     }
 
     private fun onPreviousButtonClicked() {
         binding.previousButton.setOnClickListener {
             viewModel.playPreviousTrack()
-            binding.playPauseButton.isSelected = true
+            binding.resumePauseButton.isSelected = true
         }
     }
 
-    private fun onPlayPauseButtonClicked() {
-        binding.playPauseButton.setOnClickListener { button ->
+    private fun onResumePauseButtonClicked() {
+        binding.resumePauseButton.setOnClickListener { button ->
+            viewModel.resumePauseTrack()
            button.isSelected = !button.isSelected
         }
     }
@@ -87,7 +88,9 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
                 binding.layoutTrackController.visibility = View.VISIBLE
             }
             viewModel.updateTracks(currentUITrack, position)
-            binding.playPauseButton.isSelected = true
+            binding.resumePauseButton.isSelected = true
         }
     }
+
+
 }
