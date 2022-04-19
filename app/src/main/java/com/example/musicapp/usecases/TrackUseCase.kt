@@ -27,7 +27,7 @@ class TrackUseCase @Inject constructor() {
             Track(18, "Track18", "Artist2", 0, ""),
             Track(19, "Track19", "Artist3", 0, ""),
             Track(20, "Track20", "Artist4", 0, ""),
-            Track(21, "Track21", "Artist5", 0, ""),
+            Track(21, "Track21", "Artist5", 1, "${Environment.getExternalStorageDirectory()}/Tracks/Skarb.ogg"),
         )
     }
 

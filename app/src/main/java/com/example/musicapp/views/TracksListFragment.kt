@@ -1,12 +1,9 @@
 package com.example.musicapp.views
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
@@ -26,7 +23,8 @@ import javax.inject.Inject
 class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener {
 
     private lateinit var binding: FragmentTracksListBinding
-    @Inject lateinit var adapter: TracksListAdapter
+    @Inject
+    lateinit var adapter: TracksListAdapter
     private val viewModel: TrackListViewModel by viewModels()
 
     override fun onCreateView(
@@ -47,14 +45,14 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
 
         onResumePauseButtonClicked()
         onNextButtonClicked()
-        observeCurrent()
+        observeTrackProgression()
         onPreviousButtonClicked()
         observePositionToNotify()
         observeUITrackList()
     }
 
-    private fun observeCurrent() {
-        viewModel.trackProgression.observe(viewLifecycleOwner){
+    private fun observeTrackProgression() {
+        viewModel.trackProgression.observe(viewLifecycleOwner) {
             binding.trackProgressIndicator.progress = it
         }
     }
@@ -89,17 +87,15 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
     private fun onResumePauseButtonClicked() {
         binding.resumePauseButton.setOnClickListener { button ->
             viewModel.resumePauseTrack()
-           button.isSelected = !button.isSelected
+            button.isSelected = !button.isSelected
         }
     }
 
     override fun onClick(currentUITrack: UITrack, position: Int) {
-        if(!currentUITrack.isPlaying) {
-            if(!binding.layoutTrackController.isVisible) {
-                binding.layoutTrackController.visibility = View.VISIBLE
-            }
-            viewModel.updateTracks(currentUITrack, position)
-            binding.resumePauseButton.isSelected = true
+        if (!binding.layoutTrackController.isVisible) {
+            binding.layoutTrackController.visibility = View.VISIBLE
         }
+        viewModel.updateTracks(currentUITrack, position)
+        binding.resumePauseButton.isSelected = true
     }
 }
