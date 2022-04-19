@@ -1,17 +1,20 @@
 package com.example.musicapp.viewmodels
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.example.musicapp.models.UITrack
+import com.example.musicapp.musicplayers.ExoMusicPlayer
 import com.example.musicapp.usecases.TrackUseCase
+import com.google.android.exoplayer2.Player
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class TrackListViewModel @Inject constructor(private val useCase: TrackUseCase) : ViewModel() {
+class TrackListViewModel @Inject constructor(
+    private val useCase: TrackUseCase,
+    private val musicPlayer: ExoMusicPlayer
+) : ViewModel() {
 
     private val _trackList = MutableLiveData<List<UITrack>>()
     val trackList: LiveData<List<UITrack>> = _trackList
@@ -24,10 +27,19 @@ class TrackListViewModel @Inject constructor(private val useCase: TrackUseCase) 
     private val _positionToNotify = MutableLiveData<Int>()
     val positionToNotify: LiveData<Int> = _positionToNotify
 
-    private fun getUITrackList() {
-        viewModelScope.launch {
-            _trackList.value = useCase.getTrackList().map { track ->
-                UITrack(track.id, track.name, track.artist, track.length, track.path)
+    private val _trackProgression = MutableLiveData<Int>()
+    val trackProgression: LiveData<Int> = _trackProgression
+
+    private var currentPosition: Int? = null
+    private var isCurrentPaused = false
+
+    private var trackProgressionJob: Job? = null
+
+    init {
+        musicPlayer.onStateChanged { state ->
+            when (state) {
+                Player.STATE_ENDED -> playNextTrack()
+                //add more events later?
             }
         }
     }
@@ -36,18 +48,23 @@ class TrackListViewModel @Inject constructor(private val useCase: TrackUseCase) 
         _currentTrack.value?.apply {
             isPlaying = false
         }
-        useCase.currentPosition?.let { currentPosition ->
+        currentPosition?.let { currentPosition ->
             _positionToNotify.value = currentPosition
         }
+        trackProgressionJob?.run {
+            cancel()
+        }
+        isCurrentPaused = false
         _positionToNotify.value = position
         currentUITrack.isPlaying = true
         _currentTrack.value = currentUITrack
-        useCase.currentPosition = position
-        useCase.onTrackChanged(currentUITrack.path)
+        currentPosition = position
+        musicPlayer.initialize(currentUITrack.path)
+        resumeTrackProgressionJob()
     }
 
-    fun playNextTrack() { //leave here or put in use case? how?
-        useCase.currentPosition?.let { currentPosition ->
+    fun playNextTrack() {
+        currentPosition?.let { currentPosition ->
             val newPosition = currentPosition + 1
             val list = trackList.value!!
             if (newPosition < list.size) {
@@ -57,7 +74,7 @@ class TrackListViewModel @Inject constructor(private val useCase: TrackUseCase) 
     }
 
     fun playPreviousTrack() {
-        useCase.currentPosition?.let { currentPosition ->
+        currentPosition?.let { currentPosition ->
             val newPosition = currentPosition - 1
             val list = trackList.value!!
             if (newPosition >= 0) {
@@ -67,6 +84,31 @@ class TrackListViewModel @Inject constructor(private val useCase: TrackUseCase) 
     }
 
     fun resumePauseTrack() {
-        useCase.onTrackResumedPaused()
+        isCurrentPaused = !isCurrentPaused
+        if (isCurrentPaused) {
+            musicPlayer.onPause()
+            trackProgressionJob?.run {
+                cancel()
+            }
+        } else {
+            resumeTrackProgressionJob()
+            musicPlayer.onResume()
+        }
+    }
+
+    private fun getUITrackList() {
+        viewModelScope.launch {
+            _trackList.value = useCase.getTrackList().map { track ->
+                UITrack(track.id, track.name, track.artist, track.length, track.path)
+            }
+        }
+    }
+
+    private fun resumeTrackProgressionJob() {
+        trackProgressionJob = viewModelScope.launch {
+            musicPlayer.currentPlayback.collect {
+                _trackProgression.value = it
+            }
+        }
     }
 }

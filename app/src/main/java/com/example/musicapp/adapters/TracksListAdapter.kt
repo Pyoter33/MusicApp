@@ -7,20 +7,21 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicapp.databinding.ItemTrackBinding
 import com.example.musicapp.models.UITrack
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
-import javax.inject.Singleton
 
 class TracksListAdapter @Inject constructor() :
     ListAdapter<UITrack, TracksListAdapter.TrackViewHolder>(TrackDiffUtil()) {
 
-    private lateinit var onItemClickListener: TrackClickListener
+    private lateinit var onItemClickedListener: TrackClickListener
 
-    fun setOnItemClickListener(listener: TrackClickListener) {
-        onItemClickListener = listener
+    fun onItemClicked(listener: TrackClickListener) {
+        onItemClickedListener = listener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
-        return TrackViewHolder.create(parent, onItemClickListener)
+        return TrackViewHolder.create(parent, onItemClickedListener)
     }
 
     override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
@@ -38,10 +39,10 @@ class TracksListAdapter @Inject constructor() :
             binding.itemTrackLayout.isSelected = currentUITrack.isPlaying
             binding.textTrackName.text = currentUITrack.name
             binding.textTrackArtist.text = currentUITrack.artist
-            binding.textTrackLength.text = currentUITrack.length
+            binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(currentUITrack.length * 1000)
 
             binding.root.setOnClickListener {
-                listener.onClick(currentUITrack, adapterPosition)
+                listener.onClick(currentUITrack, bindingAdapterPosition)
             }
         }
 

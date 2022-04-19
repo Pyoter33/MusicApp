@@ -120,7 +120,8 @@
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:trackCornerRadius="10dp"
-                app:trackThickness="6dp" />
+                app:trackThickness="6dp"
+                android:max="@{currentTrack.length}"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
