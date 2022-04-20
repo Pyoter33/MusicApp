@@ -10,19 +10,6 @@ abstract class TrackDatabase: RoomDatabase() {
     abstract fun trackDao(): TrackDao
 
     companion object{
-        @Volatile
-        private var INSTANCE: TrackDatabase? = null
-
-        fun getDatabase(context: Context): TrackDatabase{
-            val tempInstance= INSTANCE
-            if (tempInstance!=null){
-                return tempInstance
-            }
-            synchronized(this){
-                val instance=Room.databaseBuilder(context.applicationContext,TrackDatabase::class.java,"track_database").build()
-                INSTANCE=instance
-                return instance
-            }
-        }
+        const val DATABASE_NAME = "track_db"
     }
 }
