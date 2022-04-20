@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 @Database(entities = [Track::class], version = 1)
 abstract class TrackDatabase: RoomDatabase() {
-    abstract fun trackDao(): TrackDao
+    abstract val trackDao: TrackDao
 
     companion object{
         const val DATABASE_NAME = "track_db"
