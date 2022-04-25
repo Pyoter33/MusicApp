@@ -29,8 +29,9 @@
                 android:id="@+id/viewImageTrack"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                tools:srcCompat="@tools:sample/avatars" />
+                android:scaleType="center"
+                app:srcCompat="@drawable/icon_music_note"
+                android:background="@color/screen_background"/>
         </androidx.cardview.widget.CardView>
 
         <TextView

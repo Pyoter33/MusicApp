@@ -5,14 +5,15 @@ import com.example.musicapp.musicplayers.ExoMusicPlayerImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ServiceComponent
+import dagger.hilt.android.scopes.ServiceScoped
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 
-@InstallIn(SingletonComponent::class)
+@InstallIn(ServiceComponent::class)
 @Module
 abstract class MusicPlayerModule {
 
+    @ServiceScoped
     @Binds
-    @Singleton
     abstract fun bindExoMusicPlayer(exoMusicPlayerImpl: ExoMusicPlayerImpl): ExoMusicPlayer
 }
