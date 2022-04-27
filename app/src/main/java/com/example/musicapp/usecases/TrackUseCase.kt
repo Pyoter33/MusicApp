@@ -8,8 +8,8 @@ class TrackUseCase @Inject constructor() {
 
     suspend fun getTrackList(): List<Track> {
         return listOf(
+            Track(2, "Track2", "Artist2", 1, "${Environment.getExternalStorageDirectory()}/Tracks/Gwizd.ogg"),
             Track(1, "Track1", "Artist1", 4, "${Environment.getExternalStorageDirectory()}/Tracks/01 Intro.m4a"),
-            Track(2, "Track2", "Artist2", 1, "${Environment.getExternalStorageDirectory()}/Tracks/Skarb.ogg"),
             Track(3, "Track3", "Artist3", 205, "${Environment.getExternalStorageDirectory()}/Tracks/Over_the_Horizon.mp3"),
             Track(4, "Track4", "Artist4", 0, ""),
             Track(5, "Track5", "Artist5", 0, ""),

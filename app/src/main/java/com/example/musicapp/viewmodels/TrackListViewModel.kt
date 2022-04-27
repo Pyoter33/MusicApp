@@ -1,7 +1,9 @@
 package com.example.musicapp.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.musicapp.models.ListViewTrack
+import com.example.musicapp.musicplayers.ExoMusicPlayer
 import com.example.musicapp.musicplayers.MusicPlayerStates
 import com.example.musicapp.services.MusicPlayerService
 import com.example.musicapp.usecases.TrackUseCase
@@ -12,9 +14,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TrackListViewModel @Inject constructor(
-    private val trackUseCase: TrackUseCase
+    private val trackUseCase: TrackUseCase,
+    private val player: ExoMusicPlayer
 ) : ViewModel() {
-    private var service: MusicPlayerService? = null
 
     private val _trackList = MutableLiveData<List<ListViewTrack>>()
     val trackList: LiveData<List<ListViewTrack>> = _trackList
@@ -43,11 +45,8 @@ class TrackListViewModel @Inject constructor(
         trackProgressionJob?.cancel()
     }
 
-    fun setService(service: MusicPlayerService?) {
-        if(this.service == null) {
-            this.service = service
-            setOnStateChangeListener()
-        }
+    fun registerListener() {
+        setOnStateChangeListener()
     }
 
     fun updateTracks(currentTrack: ListViewTrack, position: Int) {
@@ -64,7 +63,7 @@ class TrackListViewModel @Inject constructor(
         currentTrack.isPlaying = true
         _currentTrack.value = currentTrack
         currentPosition = position
-        service?.initialize(currentTrack)
+        player.initialize(currentTrack)
         resumeTrackProgressionJob()
     }
 
@@ -90,10 +89,10 @@ class TrackListViewModel @Inject constructor(
 
     fun resumePauseTrack() {
         if (isCurrentPaused.value!!) {
-            service?.onResume()
+            player.onResume()
             resumeTrackProgressionJob()
         } else {
-            service?.onPause()
+            player.onPause()
             trackProgressionJob?.run {
                 cancel()
             }
@@ -110,8 +109,8 @@ class TrackListViewModel @Inject constructor(
 
     private fun resumeTrackProgressionJob() {
         trackProgressionJob = viewModelScope.launch {
-            service?.let { service ->
-                service.trackPosition.collect {
+            player.let { player ->
+                player.trackPosition.collect {
                     _trackProgression.value = it
                 }
             }
@@ -119,7 +118,7 @@ class TrackListViewModel @Inject constructor(
     }
 
     private fun setOnStateChangeListener() {
-        service?.onStateChanged { state ->
+        player.onStateChanged { state ->
             when (state) {
                 MusicPlayerStates.STATE_ENDED -> {
                     playNextTrack()

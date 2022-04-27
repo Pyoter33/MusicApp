@@ -7,12 +7,13 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
-import com.example.musicapp.services.MusicPlayerServiceImpl
+import com.example.musicapp.services.MusicPlayerService
 import com.example.musicapp.services.ServiceBinder
 import com.example.musicapp.viewmodels.TrackListViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private val viewModel: TrackListViewModel by viewModels() //shared view model for service binding and possibly future fragments
+    private val viewModel: TrackListViewModel by viewModels() //shared view model for future fragments
 
     private val broadcastReceiver = object : BroadcastReceiver() { //finish activity if service is stopped
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -38,11 +39,11 @@ class MainActivity : AppCompatActivity() {
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
-            viewModel.setService((iBinder as (ServiceBinder)).getService()) //bind service and pass it to view model
+            viewModel.registerListener()
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
-            viewModel.setService(null)
+            Toast.makeText(this@MainActivity, "Service stopped!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -67,7 +68,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startService() {
-        Intent(this, MusicPlayerServiceImpl::class.java).also { intent ->
+        Intent(this, MusicPlayerService::class.java).also { intent ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(intent)
             } else {

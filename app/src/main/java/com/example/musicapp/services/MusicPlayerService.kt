@@ -12,30 +12,24 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.MutableLiveData
 import com.example.musicapp.MainActivity
 import com.example.musicapp.R
 import com.example.musicapp.models.ListViewTrack
 import com.example.musicapp.musicplayers.ExoMusicPlayer
+import com.example.musicapp.musicplayers.ExoMusicPlayerService
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
-
-
-interface MusicPlayerService {
-    val trackPosition: Flow<Int>
-    fun onStateChanged(action: (Int) -> (Unit))
-    fun initialize(track: ListViewTrack)
-    fun onPause()
-    fun onResume()
-
-}
+import javax.inject.Singleton
 
 interface ServiceBinder {
     fun getService(): MusicPlayerService
 }
 
 @AndroidEntryPoint
-class MusicPlayerServiceImpl @Inject constructor() : Service(), MusicPlayerService {
+class MusicPlayerService @Inject constructor() : Service() {
 
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "1"
@@ -43,23 +37,21 @@ class MusicPlayerServiceImpl @Inject constructor() : Service(), MusicPlayerServi
     }
 
     @Inject
-    lateinit var musicPlayer: ExoMusicPlayer
-
-    override lateinit var trackPosition: Flow<Int>
+    lateinit var musicPlayer: ExoMusicPlayerService
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) { //stop service on notification click
-            stopForeground(true);
-            stopSelf();
+            stopForeground(true)
+            stopSelf()
         }
     }
 
     override fun onCreate() {
         super.onCreate()
         musicPlayer.build(this)
-        trackPosition = musicPlayer.trackPosition
         val filter = IntentFilter("android.intent.CLOSE_ACTIVITY")
         registerReceiver(broadcastReceiver, filter)
+        setOnTrackChangedListener()
     }
 
 
@@ -79,29 +71,18 @@ class MusicPlayerServiceImpl @Inject constructor() : Service(), MusicPlayerServi
         unregisterReceiver(broadcastReceiver)
     }
 
-    override fun onBind(intent: Intent?): IBinder {
+    override fun onBind(intent: Intent?): IBinder { // probably redundant
         return object: Binder(), ServiceBinder {
             override fun getService(): MusicPlayerService {
-                return this@MusicPlayerServiceImpl
+                return this@MusicPlayerService
             }
         }
     }
 
-    override fun onStateChanged(action: (Int) -> Unit) {
-        musicPlayer.onStateChanged(action)
-    }
-
-    override fun initialize(track: ListViewTrack) {
-        musicPlayer.initialize(track.path)
-        updateNotification(track)
-    }
-
-    override fun onPause() {
-        musicPlayer.onPause()
-    }
-
-    override fun onResume() {
-        musicPlayer.onResume()
+    private fun setOnTrackChangedListener() {
+        musicPlayer.setOnTrackChangedListener { track ->
+            updateNotification(track)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

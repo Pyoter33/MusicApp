@@ -1,22 +1,29 @@
 package com.example.musicapp.musicplayers
 
 import android.content.Context
-import android.util.Log
+import com.example.musicapp.models.ListViewTrack
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.source.TrackGroupArray
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
+import javax.inject.Singleton
 
 interface ExoMusicPlayer {
     val trackPosition: Flow<Int>
-    fun build(context: Context)
     fun onStateChanged(action: (Int) -> (Unit))
-    fun initialize(path: String)
+    fun initialize(track: ListViewTrack)
     fun onPause()
     fun onResume()
+}
+
+interface ExoMusicPlayerService {
+    fun build(context: Context)
+    fun setOnTrackChangedListener(action: (ListViewTrack) -> Unit)
     fun onStop()
 }
 
@@ -28,10 +35,12 @@ interface MusicPlayerStates {
     }
 }
 
+@Singleton
 class ExoMusicPlayerImpl @Inject constructor() :
-    ExoMusicPlayer {
+    ExoMusicPlayer, ExoMusicPlayerService {
 
     private lateinit var exoPlayer: ExoPlayer
+    private lateinit var currentTrack: ListViewTrack
 
     override fun build(context: Context) {
         exoPlayer = ExoPlayer.Builder(context).build()
@@ -44,8 +53,9 @@ class ExoMusicPlayerImpl @Inject constructor() :
         }
     }
 
-    override fun initialize(path: String) {
-        val media = MediaItem.fromUri(path)
+    override fun initialize(track: ListViewTrack) {
+        currentTrack = track
+        val media = MediaItem.fromUri(track.path)
         exoPlayer.setMediaItem(media)
         exoPlayer.prepare()
         exoPlayer.play()
@@ -61,6 +71,17 @@ class ExoMusicPlayerImpl @Inject constructor() :
 
     override fun onStop() {
         exoPlayer.stop()
+    }
+
+    override fun setOnTrackChangedListener(action: (ListViewTrack) -> Unit) {
+        exoPlayer.addListener(object : Player.Listener {
+            override fun onTracksChanged(
+                trackGroups: TrackGroupArray,
+                trackSelections: TrackSelectionArray
+            ) {
+                action(currentTrack)
+            }
+        })
     }
 
     override fun onStateChanged(action: (Int) -> Unit) {

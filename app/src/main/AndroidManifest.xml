@@ -22,7 +22,7 @@
             </intent-filter>
 
         </activity>
-        <service android:name=".services.MusicPlayerServiceImpl" android:enabled="true" android:exported="true" android:foregroundServiceType="mediaPlayback"/>
+        <service android:name=".services.MusicPlayerService" android:enabled="true" android:exported="true" android:foregroundServiceType="mediaPlayback"/>
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
