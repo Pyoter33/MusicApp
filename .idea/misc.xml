@@ -6,12 +6,13 @@
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/background_track.xml" value="0.301" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/background_track_playing.xml" value="0.179" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/background_track_selector.xml" value="0.2415" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/icon_music_note.xml" value="0.2105" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/icon_play_arrow.xml" value="0.287" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/play_pause_selector.xml" value="0.287" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/font/roboto.xml" value="0.31124412141941" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/activity_main.xml" value="0.15625" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/fragment_tracks_list.xml" value="0.264" />
-        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/item_track.xml" value="0.264" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/item_track.xml" value="0.4" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/item_track_controller.xml" value="0.264" />
       </map>
     </option>

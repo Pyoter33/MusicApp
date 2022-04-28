@@ -64,7 +64,8 @@ dependencies {
     kapt("androidx.room:room-compiler:$roomVersion")
     // optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$roomVersion")
-
+    implementation 'com.google.android.exoplayer:exoplayer:2.17.1'
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.1"
 }
 kapt {
     correctErrorTypes = true

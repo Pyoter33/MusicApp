@@ -1,53 +1,74 @@
 package com.example.musicapp.viewmodels
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.musicapp.models.UITrack
+import android.util.Log
+import androidx.lifecycle.*
+import com.example.musicapp.models.ListViewTrack
+import com.example.musicapp.musicplayers.ExoMusicPlayer
+import com.example.musicapp.musicplayers.MusicPlayerStates
+import com.example.musicapp.services.MusicPlayerService
 import com.example.musicapp.usecases.TrackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class TrackListViewModel @Inject constructor(private val useCase: TrackUseCase) : ViewModel() {
+class TrackListViewModel @Inject constructor(
+    private val trackUseCase: TrackUseCase,
+    private val player: ExoMusicPlayer
+) : ViewModel() {
 
-    private val _trackList = MutableLiveData<List<UITrack>>()
-    val trackList: LiveData<List<UITrack>> = _trackList
+    private val _trackList = MutableLiveData<List<ListViewTrack>>()
+    val trackList: LiveData<List<ListViewTrack>> = _trackList
 
-    private val _currentTrack = MutableLiveData<UITrack>().also {
-        getUITrackList()
-    }
-    val currentTrack: LiveData<UITrack> = _currentTrack
+    private val _currentTrack = MutableLiveData<ListViewTrack>()
+    val currentTrack: LiveData<ListViewTrack> = _currentTrack
 
     private val _positionToNotify = MutableLiveData<Int>()
     val positionToNotify: LiveData<Int> = _positionToNotify
 
-    private fun getUITrackList() {
-        viewModelScope.launch {
-            _trackList.value = useCase.getTrackList().map { track ->
-                UITrack(track.id, track.name, track.artist, track.length, track.path)
-            }
-        }
+    private val _trackProgression = MutableLiveData<Int>()
+    val trackProgression: LiveData<Int> = _trackProgression
+
+    private val _isCurrentPaused = MutableLiveData(false)
+    val isCurrentPaused: LiveData<Boolean> = _isCurrentPaused
+
+    private var currentPosition: Int? = null
+    private var trackProgressionJob: Job? = null
+
+    init {
+        getTrackList()
     }
 
-    fun updateTracks(currentUITrack: UITrack, position: Int) {
+    override fun onCleared() {
+        super.onCleared()
+        trackProgressionJob?.cancel()
+    }
+
+    fun registerListener() {
+        setOnStateChangeListener()
+    }
+
+    fun updateTracks(currentTrack: ListViewTrack, position: Int) {
         _currentTrack.value?.apply {
             isPlaying = false
         }
-        useCase.currentPosition?.let { currentPosition ->
+        currentPosition?.let { currentPosition ->
             _positionToNotify.value = currentPosition
         }
+        trackProgressionJob?.run {
+            cancel()
+        }
         _positionToNotify.value = position
-        currentUITrack.isPlaying = true
-        _currentTrack.value = currentUITrack
-        useCase.currentPosition = position
-        useCase.onTrackChanged(currentUITrack.path)
+        currentTrack.isPlaying = true
+        _currentTrack.value = currentTrack
+        currentPosition = position
+        player.initialize(currentTrack)
+        resumeTrackProgressionJob()
     }
 
-    fun playNextTrack() { //leave here or put in use case? how?
-        useCase.currentPosition?.let { currentPosition ->
+    fun playNextTrack() {
+        currentPosition?.let { currentPosition ->
             val newPosition = currentPosition + 1
             val list = trackList.value!!
             if (newPosition < list.size) {
@@ -57,7 +78,7 @@ class TrackListViewModel @Inject constructor(private val useCase: TrackUseCase) 
     }
 
     fun playPreviousTrack() {
-        useCase.currentPosition?.let { currentPosition ->
+        currentPosition?.let { currentPosition ->
             val newPosition = currentPosition - 1
             val list = trackList.value!!
             if (newPosition >= 0) {
@@ -67,6 +88,48 @@ class TrackListViewModel @Inject constructor(private val useCase: TrackUseCase) 
     }
 
     fun resumePauseTrack() {
-        useCase.onTrackResumedPaused()
+        if (isCurrentPaused.value!!) {
+            player.onResume()
+            resumeTrackProgressionJob()
+        } else {
+            player.onPause()
+            trackProgressionJob?.run {
+                cancel()
+            }
+        }
+    }
+
+    private fun getTrackList() {
+        viewModelScope.launch {
+            _trackList.value = trackUseCase.getTrackList().map { track ->
+                ListViewTrack(track.id, track.name, track.artist, track.length, track.path)
+            }
+        }
+    }
+
+    private fun resumeTrackProgressionJob() {
+        trackProgressionJob = viewModelScope.launch {
+            player.let { player ->
+                player.trackPosition.collect {
+                    _trackProgression.value = it
+                }
+            }
+        }
+    }
+
+    private fun setOnStateChangeListener() {
+        player.onStateChanged { state ->
+            when (state) {
+                MusicPlayerStates.STATE_ENDED -> {
+                    playNextTrack()
+                }
+                MusicPlayerStates.STATE_PAUSED -> {
+                    _isCurrentPaused.value = true
+                }
+                MusicPlayerStates.STATE_RESUMED -> {
+                    _isCurrentPaused.value = false
+                }
+            }
+        }
     }
 }
