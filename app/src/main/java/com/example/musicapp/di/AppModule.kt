@@ -2,6 +2,7 @@ package com.example.musicapp.di
 
 import android.app.Application
 import androidx.room.Room
+import com.example.musicapp.database.TrackDao
 import com.example.musicapp.database.TrackDatabase
 import com.example.musicapp.database.repository.TrackRepositoryImpl
 import com.example.musicapp.repository.TrackRepository
@@ -23,7 +24,12 @@ object AppModule {
     }
 
     @Provides
-    fun provideTrackRepository(db: TrackDatabase): TrackRepository{
-        return TrackRepositoryImpl(db.trackDao)
+    fun provideTrackRepository(db: TrackDatabase): TrackDao {
+        return db.trackDao
+    }
+
+    @Provides
+    fun provideTrackRepository(trackRepository: TrackRepositoryImpl): TrackRepository {
+        return trackRepository
     }
 }

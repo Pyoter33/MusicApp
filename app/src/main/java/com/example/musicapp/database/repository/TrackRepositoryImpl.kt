@@ -4,8 +4,9 @@ import com.example.musicapp.database.Track
 import com.example.musicapp.database.TrackDao
 import com.example.musicapp.repository.TrackRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class TrackRepositoryImpl(
+class TrackRepositoryImpl @Inject constructor(
     private val dao: TrackDao
 ): TrackRepository {
     override fun getAll(): Flow<List<Track>> {
