@@ -40,6 +40,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        viewModel.getTrackList()
         bindLayouts()
         onResumePauseButtonClicked()
         onNextButtonClicked()

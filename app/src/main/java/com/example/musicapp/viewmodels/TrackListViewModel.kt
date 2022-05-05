@@ -7,6 +7,7 @@ import com.example.musicapp.musicplayers.MusicPlayerStates
 import com.example.musicapp.usecases.TrackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,7 +36,7 @@ class TrackListViewModel @Inject constructor(
     private var trackProgressionJob: Job? = null
 
     init {
-        getTrackList()
+
     }
 
     override fun onCleared() {
@@ -97,7 +98,7 @@ class TrackListViewModel @Inject constructor(
         }
     }
 
-    private fun getTrackList() {
+    fun getTrackList() {
         viewModelScope.launch {
             trackUseCase.getTrackList().collect { list ->
                 _trackList.value = list.map { track ->
