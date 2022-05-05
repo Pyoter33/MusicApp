@@ -1,11 +1,9 @@
 package com.example.musicapp.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.musicapp.models.ListViewTrack
 import com.example.musicapp.musicplayers.ExoMusicPlayer
 import com.example.musicapp.musicplayers.MusicPlayerStates
-import com.example.musicapp.services.MusicPlayerService
 import com.example.musicapp.usecases.TrackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job

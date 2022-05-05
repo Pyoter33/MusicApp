@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import com.example.musicapp.services.MusicPlayerService
 import com.example.musicapp.services.ServiceBinder
+import com.example.musicapp.viewmodels.InsertTracksViewModel
 import com.example.musicapp.viewmodels.TrackListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -30,6 +31,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val viewModel: TrackListViewModel by viewModels() //shared view model for future fragments
+
+    private val insertTracksViewModel: InsertTracksViewModel by viewModels()
 
     private val broadcastReceiver = object : BroadcastReceiver() { //finish activity if service is stopped
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -50,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        insertTracksViewModel.insertTracks()
 
         val filter = IntentFilter("android.intent.CLOSE_ACTIVITY")
         registerReceiver(broadcastReceiver, filter)
