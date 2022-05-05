@@ -9,6 +9,7 @@ import com.example.musicapp.services.MusicPlayerService
 import com.example.musicapp.usecases.TrackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,7 +38,7 @@ class TrackListViewModel @Inject constructor(
     private var trackProgressionJob: Job? = null
 
     init {
-        getTrackList()
+
     }
 
     override fun onCleared() {
@@ -99,10 +100,18 @@ class TrackListViewModel @Inject constructor(
         }
     }
 
-    private fun getTrackList() {
+    fun getTrackList() {
         viewModelScope.launch {
-            _trackList.value = trackUseCase.getTrackList().map { track ->
-                ListViewTrack(track.id, track.name, track.artist, track.length, track.path)
+            trackUseCase.getTrackList().collect { list ->
+                _trackList.value = list.map { track ->
+                    ListViewTrack(
+                        track.id,
+                        track.title!!,
+                        track.author!!,
+                        track.length!!,
+                        track.path!!
+                    )
+                }
             }
         }
     }
