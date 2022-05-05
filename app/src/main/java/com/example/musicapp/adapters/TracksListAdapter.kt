@@ -42,7 +42,7 @@ class TracksListAdapter @Inject constructor() :
             binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(currentListViewTrack.length * 1000)
 
             binding.root.setOnClickListener {
-                listener.onClick(currentListViewTrack, bindingAdapterPosition)
+                listener.onClick(currentListViewTrack, adapterPosition)
             }
         }
 

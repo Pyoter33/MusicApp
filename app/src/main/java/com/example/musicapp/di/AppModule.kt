@@ -26,4 +26,11 @@ object AppModule {
     fun provideTrackRepository(db: TrackDatabase): TrackRepository{
         return TrackRepositoryImpl(db.trackDao)
     }
+
+//    @Provides
+//    fun provideTrackUseCases(repository: TrackRepository): TrackUseCases{
+//        return TrackUseCases(
+//            InsertTracks(repository)
+//        )
+//    }
 }
