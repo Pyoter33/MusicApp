@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TrackDao{
     @Insert
-    fun insertAll(vararg tracks: Track)
+    suspend fun insertAll(track: Track)
 
     @Query("SELECT * FROM track")
     fun getAll(): Flow<List<Track>>

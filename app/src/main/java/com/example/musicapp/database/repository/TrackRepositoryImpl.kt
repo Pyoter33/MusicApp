@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 class TrackRepositoryImpl(
     private val dao: TrackDao
 ): TrackRepository {
-    override fun getAll(): Flow<List<Track>> {
+    override suspend fun getAll(): Flow<List<Track>> {
         return dao.getAll()
     }
 
@@ -16,8 +16,8 @@ class TrackRepositoryImpl(
         return dao.getTrackById(id)
     }
 
-    override fun insertAll(vararg tracks: Track) {
-        dao.insertAll(*tracks)
+    override suspend fun insertAll(track: Track) {
+        dao.insertAll(track)
     }
 
     override suspend fun deleteTrack(track: Track) {
