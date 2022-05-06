@@ -103,7 +103,11 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
 
     private fun onResumePauseButtonClicked() {
         binding.resumePauseButton.setOnClickListener {
-            viewModel.resumePauseTrack()
+            if(viewModel.isCurrentPaused.value!!) {
+                viewModel.resumeTrack()
+            } else {
+                viewModel.pauseTrack()
+            }
         }
     }
 

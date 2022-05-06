@@ -39,7 +39,7 @@ class TracksListAdapter @Inject constructor() :
             binding.itemTrackLayout.isSelected = currentListViewTrack.isPlaying
             binding.textTrackName.text = currentListViewTrack.name
             binding.textTrackArtist.text = currentListViewTrack.artist
-            binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(currentListViewTrack.length * 1000)
+            binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(currentListViewTrack.length)
 
             binding.root.setOnClickListener {
                 listener.onClick(currentListViewTrack, adapterPosition)

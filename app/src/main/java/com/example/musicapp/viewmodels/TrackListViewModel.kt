@@ -86,15 +86,15 @@ class TrackListViewModel @Inject constructor(
         }
     }
 
-    fun resumePauseTrack() {
-        if (isCurrentPaused.value!!) {
-            player.onResume()
-            resumeTrackProgressionJob()
-        } else {
-            player.onPause()
-            trackProgressionJob?.run {
-                cancel()
-            }
+    fun resumeTrack() {
+        player.onResume()
+        resumeTrackProgressionJob()
+    }
+
+    fun pauseTrack() {
+        player.onPause()
+        trackProgressionJob?.run {
+            cancel()
         }
     }
 

@@ -26,31 +26,29 @@ class TrackUseCaseTest {
     lateinit var useCase: TrackUseCase
 
     @Test
-    fun test_getTrackListEmpty() {
+    fun shouldGetTrackListEmpty() {
         runBlocking {
+            //given
             val expected = listOf<Track>()
-//            val repository: TrackRepository = mock()
-//            val useCase = TrackUseCase(repository)
-
             whenever(repository.getAll()).thenReturn(flowOf(listOf()))
 
+            //when
             val result = useCase.getTrackList().firstOrNull()
 
+            //then
             Assert.assertEquals(expected, result)
+            verify(repository).getAll()
         }
     }
 
     @Test
-    fun test_getTrackListNonEmpty() {
+    fun shouldGetTrackListNonEmpty() {
         runBlocking {
             //given
             val track1 = Track(4, "Track4", "Artist4", "", 0)
             val track2 = Track(5, "Track5", "Artist5", "", 0)
             val track3 = Track(7, "Track7", "Artist1", "", 0)
             val expected = listOf(track1, track2, track3)
-            val repository: TrackRepository = mock()
-            val useCase = TrackUseCase(repository)
-
             whenever(repository.getAll()).thenReturn(flowOf(listOf(track1, track2, track3)))
 
             //when
@@ -58,7 +56,6 @@ class TrackUseCaseTest {
 
             //then
             Assert.assertEquals(expected, result)
-            //verify get all
             verify(repository).getAll()
         }
     }
