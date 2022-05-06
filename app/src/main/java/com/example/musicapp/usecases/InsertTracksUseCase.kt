@@ -10,8 +10,8 @@ import javax.inject.Inject
 class InsertTracksUseCase @Inject constructor(
     private val repository: TrackRepository
 ) {
-    suspend fun insertTracks(tracksList: List<Track>){
-        for (track in tracksList) {
+    suspend fun insertTracks(tracksSet: Set<Track>){
+        for (track in tracksSet) {
             repository.insertAll(track)
         }
     }

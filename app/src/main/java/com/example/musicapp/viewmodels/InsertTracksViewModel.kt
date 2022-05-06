@@ -21,7 +21,7 @@ class InsertTracksViewModel @Inject constructor(
         val file = File(path)
         val list = file.list()
         val mmr = MediaMetadataRetriever()
-        val listTracks = mutableListOf<Track>()
+        val setTracks = mutableListOf<Track>().toMutableSet()
 
         for (elem in list!!) {
             mmr.setDataSource("$path/$elem")
@@ -30,11 +30,13 @@ class InsertTracksViewModel @Inject constructor(
             var path = "$path/$elem"
             var lengthString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             var length = Integer.parseInt(lengthString)
-            listTracks.add(Track(0,title,artist,path,length))
+            if (!setTracks.contains(Track(0,title,artist,path,length))) {
+                setTracks.add(Track(0, title, artist, path, length))
+            }
         }
 
         viewModelScope.launch {
-            insertTracksUseCase.insertTracks(listTracks)
+            insertTracksUseCase.insertTracks(setTracks)
         }
     }
 }

@@ -53,8 +53,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        insertTracksViewModel.insertTracks()
-
+        checkPermissions()
         val filter = IntentFilter("android.intent.CLOSE_ACTIVITY")
         registerReceiver(broadcastReceiver, filter)
         startService()
@@ -62,7 +61,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        checkPermissions()
+
+        insertTracksViewModel.insertTracks()
     }
 
     override fun onDestroy() {
@@ -93,6 +93,20 @@ class MainActivity : AppCompatActivity() {
                 PERMISSIONS_STORAGE,
                 REQUEST_EXTERNAL_STORAGE
             )
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>,
+                                            grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this@MainActivity, "Permission Granted", Toast.LENGTH_SHORT).show()
+
+            } else {
+                Toast.makeText(this@MainActivity, "Permission Denied", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }
