@@ -19,6 +19,7 @@ interface ExoMusicPlayer {
     fun initialize(track: ListViewTrack)
     fun onPause()
     fun onResume()
+    fun onSeek(timeStamp: Int)
 }
 
 interface ExoMusicPlayerService {
@@ -48,7 +49,7 @@ class ExoMusicPlayerImpl @Inject constructor() :
 
     override val trackPosition: Flow<Int> = flow {
         while (true) { //ugly while(true) but found in docs
-            emit((exoPlayer.currentPosition / 1000).toInt())
+            emit(exoPlayer.currentPosition.toInt())
             delay(1000)
         }
     }
@@ -71,6 +72,10 @@ class ExoMusicPlayerImpl @Inject constructor() :
 
     override fun onStop() {
         exoPlayer.stop()
+    }
+
+    override fun onSeek(timeStamp: Int) {
+        exoPlayer.seekTo(timeStamp.toLong())
     }
 
     override fun setOnTrackChangedListener(action: (ListViewTrack) -> Unit) {

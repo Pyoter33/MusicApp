@@ -1,40 +1,36 @@
 package com.example.musicapp.views
 
 import android.os.Bundle
-import android.util.Log
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
+import android.widget.SeekBar
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.musicapp.R
-import com.example.musicapp.adapters.TrackClickListener
-import com.example.musicapp.adapters.TracksListAdapter
-import com.example.musicapp.databinding.FragmentTracksListBinding
-import com.example.musicapp.models.ListViewTrack
+import com.example.musicapp.databinding.FragmentTrackDetailsBinding
 import com.example.musicapp.viewmodels.TrackListViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 
-
 @AndroidEntryPoint
-class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener {
+class TrackDetailsFragment @Inject constructor() : Fragment(), SeekBar.OnSeekBarChangeListener {
 
-    private lateinit var binding: FragmentTracksListBinding
+    private lateinit var binding: FragmentTrackDetailsBinding
 
-    @Inject
-    lateinit var adapter: TracksListAdapter
-    private val viewModel: TrackListViewModel by activityViewModels() //getting shared view model
+    private val viewModel: TrackListViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_tracks_list, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_track_details, container, false)
+
         return binding.root
     }
 
@@ -42,25 +38,26 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
         super.onViewCreated(view, savedInstanceState)
 
         bindLayouts()
-        onResumePauseButtonClicked()
-        onNextButtonClicked()
-        observeTrackProgression()
-        onPreviousButtonClicked()
-        observePositionToNotify()
-        observeUITrackList()
         observeResumePause()
-        onTrackControllerLayoutClicked()
+        observeTrackProgression()
+        onNextButtonClicked()
+        onPreviousButtonClicked()
+        onResumePauseButtonClicked()
+        observeCurrentTrack()
+        registerSeekBarCallbacks()
     }
 
+    private fun observeCurrentTrack() {
+        viewModel.currentTrack.observe(viewLifecycleOwner) {
+            binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(it.length)
+        }
+    }
 
-    override fun onStart() {
-        super.onStart()
-        adapter.notifyDataSetChanged() //to reload the view when app comes back to foreground
+    private fun stopObserveCurrentTrack() {
+        viewModel.currentTrack.removeObservers(viewLifecycleOwner)
     }
 
     private fun bindLayouts() {
-        binding.viewRecyclerTracks.adapter = adapter
-        binding.viewRecyclerTracks.layoutManager = LinearLayoutManager(context)
         binding.currentTrack = viewModel.currentTrack
         binding.lifecycleOwner = this
     }
@@ -68,25 +65,13 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
     private fun observeTrackProgression() {
         viewModel.trackProgression.observe(viewLifecycleOwner) {
             binding.trackProgressSeekBar.progress = it
+            binding.textTrackProgression.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(it)
         }
     }
 
     private fun observeResumePause() {
         viewModel.isCurrentPaused.observe(viewLifecycleOwner) {
             binding.resumePauseButton.isSelected = !it
-        }
-    }
-
-    private fun observeUITrackList() {
-        viewModel.trackList.observe(viewLifecycleOwner) { list ->
-            adapter.submitList(list)
-            adapter.onItemClicked(this)
-        }
-    }
-
-    private fun observePositionToNotify() {
-        viewModel.positionToNotify.observe(viewLifecycleOwner) { position ->
-            adapter.notifyItemChanged(position)
         }
     }
 
@@ -112,13 +97,23 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
         }
     }
 
-    private fun onTrackControllerLayoutClicked() {
-        binding.layoutTrackController.setOnClickListener{
-            findNavController().navigate(TracksListFragmentDirections.actionTracksListFragmentToTrackDetailsFragment())
+    private fun registerSeekBarCallbacks() {
+        binding.trackProgressSeekBar.setOnSeekBarChangeListener(this)
+    }
+
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        if(fromUser) {
+            viewModel.seekOnTrack(progress)
+            binding.textTrackProgression.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(progress)
         }
     }
 
-    override fun onClick(currentListViewTrack: ListViewTrack, position: Int) {
-        viewModel.updateTracks(currentListViewTrack, position)
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        stopObserveCurrentTrack()
     }
+
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        observeCurrentTrack()
+    }
+
 }

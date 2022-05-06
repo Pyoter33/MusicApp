@@ -9,5 +9,13 @@
         android:id="@+id/tracksListFragment"
         android:name="com.example.musicapp.views.TracksListFragment"
         android:label="fragment_tracks_list"
-        tools:layout="@layout/fragment_tracks_list" />
+        tools:layout="@layout/fragment_tracks_list" >
+        <action
+            android:id="@+id/action_tracksListFragment_to_trackDetailsFragment"
+            app:destination="@id/trackDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/trackDetailsFragment"
+        android:name="com.example.musicapp.views.TrackDetailsFragment"
+        android:label="TrackDetailsFragment" />
 </navigation>

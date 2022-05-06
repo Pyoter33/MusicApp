@@ -17,7 +17,11 @@ class TrackListViewModel @Inject constructor(
     private val player: ExoMusicPlayer
 ) : ViewModel() {
 
-    private val _trackList = MutableLiveData<List<ListViewTrack>>()
+    private val _trackList by lazy {
+        val liveData = MutableLiveData<List<ListViewTrack>>()
+        getTrackList(liveData)
+        return@lazy liveData
+    }
     val trackList: LiveData<List<ListViewTrack>> = _trackList
 
     private val _currentTrack = MutableLiveData<ListViewTrack>()
@@ -34,10 +38,6 @@ class TrackListViewModel @Inject constructor(
 
     private var currentPosition: Int? = null
     private var trackProgressionJob: Job? = null
-
-    init {
-
-    }
 
     override fun onCleared() {
         super.onCleared()
@@ -98,15 +98,19 @@ class TrackListViewModel @Inject constructor(
         }
     }
 
-    fun getTrackList() {
+    fun seekOnTrack(timeStamp: Int) {
+        player.onSeek(timeStamp)
+    }
+
+    private fun getTrackList(liveData: MutableLiveData<List<ListViewTrack>>) {
         viewModelScope.launch {
             trackUseCase.getTrackList().collect { list ->
-                _trackList.value = list.map { track ->
+                liveData.value = list.map { track ->
                     ListViewTrack(
                         track.id,
-                        track.title!!,
-                        track.author!!,
-                        track.length!!,
+                        track.title ?: "Unknown",
+                        track.author?: "Unknown",
+                        track.length?: 0,
                         track.path!!
                     )
                 }
