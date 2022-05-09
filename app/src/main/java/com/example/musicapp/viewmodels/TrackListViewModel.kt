@@ -1,5 +1,6 @@
 package com.example.musicapp.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.musicapp.models.ListViewTrack
 import com.example.musicapp.musicplayers.ExoMusicPlayer
@@ -17,12 +18,11 @@ class TrackListViewModel @Inject constructor(
     private val player: ExoMusicPlayer
 ) : ViewModel() {
 
-    private val _trackList by lazy {
-        val liveData = MutableLiveData<List<ListViewTrack>>()
-        getTrackList(liveData)
-        return@lazy liveData
+    private val _trackList = MutableLiveData<List<ListViewTrack>>()
+    val trackList: LiveData<List<ListViewTrack>> by lazy {
+        getTrackList(_trackList)
+        return@lazy _trackList
     }
-    val trackList: LiveData<List<ListViewTrack>> = _trackList
 
     private val _currentTrack = MutableLiveData<ListViewTrack>()
     val currentTrack: LiveData<ListViewTrack> = _currentTrack
