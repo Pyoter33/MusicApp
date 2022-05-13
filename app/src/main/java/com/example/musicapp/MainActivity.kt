@@ -1,16 +1,23 @@
 package com.example.musicapp
 
 import android.Manifest
+import android.app.Activity
 import android.content.*
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.IBinder
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.setupActionBarWithNavController
+import com.example.musicapp.other.DirectoryObserver
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.musicapp.services.MusicPlayerService
 import com.example.musicapp.viewmodels.InsertTracksViewModel
@@ -20,6 +27,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+private lateinit var navController: NavController
 
     companion object {
         private const val REQUEST_EXTERNAL_STORAGE = 1
@@ -76,6 +84,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        Toast.makeText(this,"on Create",Toast.LENGTH_SHORT).show()
+        checkPermissions()
+
+        val navHostFragment=supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
+        navController=navHostFragment.findNavController()
+
+        setupActionBarWithNavController(navController)
         val closeActivityFilter = IntentFilter("android.intent.CLOSE_ACTIVITY")
         val resumePauseFilter = IntentFilter("android.intent.RESUME_PAUSE_TRACK")
         val previousTrackFilter = IntentFilter("android.intent.PLAY_PREVIOUS_TRACK")
@@ -90,9 +105,23 @@ class MainActivity : AppCompatActivity() {
         startService()
     }
 
+    private fun insertTracksIfPersmissionGranted() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            insertTracksViewModel.insertTracks()
+        }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp() || super.onSupportNavigateUp()
+    }
+
     override fun onStart() {
         super.onStart()
-        insertTracksViewModel.insertTracks()
+        insertTracksIfPersmissionGranted()
     }
 
     override fun onDestroy() {
@@ -134,12 +163,11 @@ class MainActivity : AppCompatActivity() {
                                             grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_EXTERNAL_STORAGE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this@MainActivity, "Permission Granted", Toast.LENGTH_SHORT).show()
-
-            } else {
-                Toast.makeText(this@MainActivity, "Permission Denied", Toast.LENGTH_SHORT).show()
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {             
+                insertTracksViewModel.insertTracks()
             }
         }
     }
 }
+
+const val PERMISSION_GRANTED= Activity.RESULT_FIRST_USER

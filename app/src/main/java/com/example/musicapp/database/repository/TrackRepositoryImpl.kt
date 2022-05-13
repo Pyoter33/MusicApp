@@ -22,7 +22,7 @@ class TrackRepositoryImpl(
         dao.insertAll(track)
     }
 
-    override suspend fun deleteTrack(track: Track) {
-        dao.deleteTrack(track)
+    override suspend fun deleteTrack(path: String) {
+        dao.deleteTrack(path)
     }
 }

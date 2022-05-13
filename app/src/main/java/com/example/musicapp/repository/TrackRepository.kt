@@ -10,6 +10,6 @@ interface TrackRepository {
 
     suspend fun insertAll(tracks: Track)
 
-    suspend fun deleteTrack(track: Track)
+    suspend fun deleteTrack(path: String)
 
 }
