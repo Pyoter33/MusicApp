@@ -6,6 +6,10 @@
         <item name="fontFamily">@font/roboto</item>
     </style>
 
+    <style name="TrackText.Big">
+        <item name="android:textSize">21sp</item>
+    </style>
+
     <style name="TrackText.Bold">
         <item name="android:textStyle">bold</item>
     </style>
@@ -13,6 +17,10 @@
     <style name="TrackText.Artist">
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/track_description</item>
+    </style>
+
+    <style name="TrackText.Artist.Big">
+        <item name="android:textSize">18sp</item>
     </style>
 
     <style name="TrackText.Time">

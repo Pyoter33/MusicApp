@@ -11,5 +11,4 @@ class TrackUseCase @Inject constructor(private val repository: TrackRepository) 
     suspend fun getTrackList(): Flow<List<Track>> {
         return repository.getAll()
     }
-
 }

@@ -17,7 +17,10 @@ class TrackListViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _trackList = MutableLiveData<List<ListViewTrack>>()
-    val trackList: LiveData<List<ListViewTrack>> = _trackList
+    val trackList: LiveData<List<ListViewTrack>> by lazy {
+        getTrackList(_trackList)
+        return@lazy _trackList
+    }
 
     private val _currentTrack = MutableLiveData<ListViewTrack>()
     val currentTrack: LiveData<ListViewTrack> = _currentTrack
@@ -28,15 +31,11 @@ class TrackListViewModel @Inject constructor(
     private val _trackProgression = MutableLiveData<Int>()
     val trackProgression: LiveData<Int> = _trackProgression
 
-    private val _isCurrentPaused = MutableLiveData(false)
+    private val _isCurrentPaused = MutableLiveData<Boolean>()
     val isCurrentPaused: LiveData<Boolean> = _isCurrentPaused
 
     private var currentPosition: Int? = null
     private var trackProgressionJob: Job? = null
-
-    init {
-        getTrackList()
-    }
 
     override fun onCleared() {
         super.onCleared()
@@ -85,27 +84,31 @@ class TrackListViewModel @Inject constructor(
         }
     }
 
-    fun resumePauseTrack() {
-        if (isCurrentPaused.value!!) {
-            player.onResume()
-            resumeTrackProgressionJob()
-        } else {
-            player.onPause()
-            trackProgressionJob?.run {
-                cancel()
-            }
+    fun resumeTrack() {
+        player.onResume()
+        resumeTrackProgressionJob()
+    }
+
+    fun pauseTrack() {
+        player.onPause()
+        trackProgressionJob?.run {
+            cancel()
         }
     }
 
-    private fun getTrackList() {
+    fun seekOnTrack(timeStamp: Int) {
+        player.onSeek(timeStamp)
+    }
+
+    private fun getTrackList(liveData: MutableLiveData<List<ListViewTrack>>) {
         viewModelScope.launch {
             trackUseCase.getTrackList().collect { list ->
-                _trackList.value = list.map { track ->
+                liveData.value = list.map { track ->
                     ListViewTrack(
                         track.id,
-                        track.title!!,
-                        track.author!!,
-                        track.length!!,
+                        track.title ?: "Unknown",
+                        track.author?: "Unknown",
+                        track.length?: 0,
                         track.path!!
                     )
                 }

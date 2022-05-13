@@ -18,6 +18,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.example.musicapp.other.DirectoryObserver
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.musicapp.services.MusicPlayerService
 import com.example.musicapp.viewmodels.InsertTracksViewModel
 import com.example.musicapp.viewmodels.TrackListViewModel
@@ -39,9 +40,33 @@ private lateinit var navController: NavController
 
     private val insertTracksViewModel: InsertTracksViewModel by viewModels()
 
-    private val broadcastReceiver = object : BroadcastReceiver() { //finish activity if service is stopped
+    private val closeActivityBroadcastReceiver = object : BroadcastReceiver() { //finish activity if service is stopped
         override fun onReceive(context: Context?, intent: Intent?) {
             finish()
+        }
+    }
+
+    private val resumePauseBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            viewModel.isCurrentPaused.value?.let { value ->
+                if (value) {
+                    viewModel.resumeTrack()
+                } else {
+                    viewModel.pauseTrack()
+                }
+            }
+        }
+    }
+
+    private val nextTrackBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            viewModel.playNextTrack()
+        }
+    }
+
+    private val previousTrackBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            viewModel.playPreviousTrack()
         }
     }
 
@@ -58,6 +83,7 @@ private lateinit var navController: NavController
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         Toast.makeText(this,"on Create",Toast.LENGTH_SHORT).show()
         checkPermissions()
 
@@ -65,9 +91,17 @@ private lateinit var navController: NavController
         navController=navHostFragment.findNavController()
 
         setupActionBarWithNavController(navController)
+        val closeActivityFilter = IntentFilter("android.intent.CLOSE_ACTIVITY")
+        val resumePauseFilter = IntentFilter("android.intent.RESUME_PAUSE_TRACK")
+        val previousTrackFilter = IntentFilter("android.intent.PLAY_PREVIOUS_TRACK")
+        val nextTrackFilter = IntentFilter("android.intent.PLAY_NEXT_TRACK")
 
-        val filter = IntentFilter("android.intent.CLOSE_ACTIVITY")
-        registerReceiver(broadcastReceiver, filter)
+        registerReceiver(closeActivityBroadcastReceiver, closeActivityFilter)
+        registerReceiver(resumePauseBroadcastReceiver, resumePauseFilter)
+        registerReceiver(previousTrackBroadcastReceiver, previousTrackFilter)
+        registerReceiver(nextTrackBroadcastReceiver, nextTrackFilter)
+
+        checkPermissions()
         startService()
     }
 
@@ -87,13 +121,15 @@ private lateinit var navController: NavController
 
     override fun onStart() {
         super.onStart()
-        Toast.makeText(this,"on Start",Toast.LENGTH_SHORT).show()
         insertTracksIfPersmissionGranted()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(broadcastReceiver)
+        unregisterReceiver(closeActivityBroadcastReceiver)
+        unregisterReceiver(resumePauseBroadcastReceiver)
+        unregisterReceiver(previousTrackBroadcastReceiver)
+        unregisterReceiver(nextTrackBroadcastReceiver)
         unbindService(connection)
     }
 
@@ -127,11 +163,8 @@ private lateinit var navController: NavController
                                             grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_EXTERNAL_STORAGE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this@MainActivity, "Permission Granted", Toast.LENGTH_SHORT).show()
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {             
                 insertTracksViewModel.insertTracks()
-            } else {
-                Toast.makeText(this@MainActivity, "Permission Denied", Toast.LENGTH_SHORT).show()
             }
         }
     }

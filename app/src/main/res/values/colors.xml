@@ -10,5 +10,6 @@
     <color name="screen_background">#232323</color>
     <color name="track_base_background">#5A5A5A</color>
     <color name="track_playing_background">#C85036DF</color>
+    <color name="track_playing_background_transparent">#235036DF</color>
     <color name="track_description">#B8B8B8</color>
 </resources>

@@ -8,6 +8,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.musicapp.R
 import com.example.musicapp.adapters.TrackClickListener
@@ -49,6 +50,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
         observePositionToNotify()
         observeUITrackList()
         observeResumePause()
+        onTrackControllerLayoutClicked()
     }
 
 
@@ -66,7 +68,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
 
     private fun observeTrackProgression() {
         viewModel.trackProgression.observe(viewLifecycleOwner) {
-            binding.trackProgressIndicator.progress = it
+            binding.trackProgressSeekBar.progress = it
         }
     }
 
@@ -103,7 +105,19 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
 
     private fun onResumePauseButtonClicked() {
         binding.resumePauseButton.setOnClickListener {
-            viewModel.resumePauseTrack()
+            viewModel.isCurrentPaused.value?.let { value ->
+                if (value) {
+                    viewModel.resumeTrack()
+                } else {
+                    viewModel.pauseTrack()
+                }
+            }
+        }
+    }
+
+    private fun onTrackControllerLayoutClicked() {
+        binding.layoutTrackController.setOnClickListener{
+            findNavController().navigate(TracksListFragmentDirections.actionTracksListFragmentToTrackDetailsFragment())
         }
     }
 

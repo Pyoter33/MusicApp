@@ -10,11 +10,17 @@
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/background_track_playing.xml" value="0.179" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/background_track_selector.xml" value="0.2415" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/icon_music_note.xml" value="0.2105" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/icon_pause.xml" value="0.2775" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/icon_play_arrow.xml" value="0.287" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/play_pause_selector.xml" value="0.287" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/seek_bar.xml" value="0.2705" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/seekbar.xml" value="0.3865" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/seekt_humb.xml" value="0.2705" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/font/roboto.xml" value="0.31124412141941" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout-land/fragment_track_details.xml" value="0.2" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/activity_main.xml" value="0.15625" />
-        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/fragment_tracks_list.xml" value="0.264" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/fragment_track_details.xml" value="0.264" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/fragment_tracks_list.xml" value="0.176" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/item_track.xml" value="0.4" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/item_track_controller.xml" value="0.264" />
       </map>

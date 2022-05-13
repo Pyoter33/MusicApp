@@ -9,20 +9,16 @@ import android.content.IntentFilter
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.MutableLiveData
+import androidx.media.app.NotificationCompat.MediaStyle
 import com.example.musicapp.MainActivity
 import com.example.musicapp.R
 import com.example.musicapp.models.ListViewTrack
-import com.example.musicapp.musicplayers.ExoMusicPlayer
 import com.example.musicapp.musicplayers.ExoMusicPlayerService
+import com.example.musicapp.musicplayers.MusicPlayerStates
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.scopes.ActivityRetainedScoped
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
-import javax.inject.Singleton
 
 interface ServiceBinder {
     fun getService(): MusicPlayerService
@@ -34,13 +30,41 @@ class MusicPlayerService @Inject constructor() : Service() {
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "1"
         const val NOTIFICATION_ID = 1
+        const val ARTIST_PLACEHOLDER = "Artist"
+        const val TITLE_PLACEHOLDER = "Title"
     }
+
+    private lateinit var artist: String
+    private lateinit var title: String
+
+    private val pendingIntent by lazy {
+        Intent(this, MainActivity::class.java).let { notificationIntent ->
+            PendingIntent.getActivity(this, 0, notificationIntent, FLAG_IMMUTABLE)
+        }
+    }
+
+    private val closeIntent by lazy { Intent("android.intent.CLOSE_ACTIVITY") }
+    private val pendingCloseIntent by lazy { PendingIntent.getBroadcast(this, 0, closeIntent, FLAG_IMMUTABLE) }
+
+    private val resumePauseIntent by lazy { Intent("android.intent.RESUME_PAUSE_TRACK") }
+    private val pendingResumePauseIntent by lazy { PendingIntent.getBroadcast(this, 0, resumePauseIntent, FLAG_IMMUTABLE) }
+
+    private val nextTrackIntent by lazy { Intent("android.intent.PLAY_NEXT_TRACK") }
+    private val pendingNextTrackIntent by lazy { PendingIntent.getBroadcast(this, 0, nextTrackIntent, FLAG_IMMUTABLE) }
+
+    private val previousTrackIntent by lazy { Intent("android.intent.PLAY_PREVIOUS_TRACK") }
+    private val pendingPreviousTrackIntent by lazy { PendingIntent.getBroadcast(this, 0, previousTrackIntent, FLAG_IMMUTABLE) }
+
+    private val notificationManager by lazy { getSystemService(NOTIFICATION_SERVICE) as NotificationManager }
 
     @Inject
     lateinit var musicPlayer: ExoMusicPlayerService
 
-    private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) { //stop service on notification click
+    private val broadcastReceiver = object : BroadcastReceiver() { //stop service on notification click
+        override fun onReceive(
+            context: Context?,
+            intent: Intent?
+        ) {
             stopForeground(true)
             stopSelf()
         }
@@ -51,7 +75,10 @@ class MusicPlayerService @Inject constructor() : Service() {
         musicPlayer.build(this)
         val filter = IntentFilter("android.intent.CLOSE_ACTIVITY")
         registerReceiver(broadcastReceiver, filter)
+        artist = ARTIST_PLACEHOLDER
+        title = TITLE_PLACEHOLDER
         setOnTrackChangedListener()
+        setOnStateChangeListener()
     }
 
 
@@ -60,7 +87,7 @@ class MusicPlayerService @Inject constructor() : Service() {
             addNotificationChannel(NOTIFICATION_CHANNEL_ID)
         }
 
-        val notification = createNotification("Title", "Artist")
+        val notification = createNotification(false)
         startForeground(NOTIFICATION_ID, notification)
         return START_NOT_STICKY
     }
@@ -71,8 +98,8 @@ class MusicPlayerService @Inject constructor() : Service() {
         unregisterReceiver(broadcastReceiver)
     }
 
-    override fun onBind(intent: Intent?): IBinder { // probably redundant
-        return object: Binder(), ServiceBinder {
+    override fun onBind(intent: Intent?): IBinder {
+        return object : Binder(), ServiceBinder {
             override fun getService(): MusicPlayerService {
                 return this@MusicPlayerService
             }
@@ -82,6 +109,21 @@ class MusicPlayerService @Inject constructor() : Service() {
     private fun setOnTrackChangedListener() {
         musicPlayer.setOnTrackChangedListener { track ->
             updateNotification(track)
+        }
+    }
+
+    private fun setOnStateChangeListener() {
+        musicPlayer.onStateChanged { state ->
+            when (state) {
+                MusicPlayerStates.STATE_PAUSED -> {
+                    val notification = createNotification(false)
+                    notificationManager.notify(NOTIFICATION_ID, notification)
+                }
+                MusicPlayerStates.STATE_RESUMED -> {
+                    val notification = createNotification(true)
+                    notificationManager.notify(NOTIFICATION_ID, notification)
+                }
+            }
         }
     }
 
@@ -96,28 +138,44 @@ class MusicPlayerService @Inject constructor() : Service() {
         notificationManager.createNotificationChannel(channel)
     }
 
-    private fun createNotification(title: String, artist: String): Notification {
-        val pendingIntent: PendingIntent = Intent(this, MainActivity::class.java).let { notificationIntent ->
-            PendingIntent.getActivity(this, 0, notificationIntent, FLAG_IMMUTABLE)
+    private fun createNotification(isPlaying: Boolean): Notification {
+        val resumePauseActionIconId = if (isPlaying) {
+            R.drawable.icon_pause
+        } else {
+            R.drawable.icon_play_arrow
         }
 
-        val closeIntent = Intent("android.intent.CLOSE_ACTIVITY")
-        val pendingCloseIntent = PendingIntent.getBroadcast(this, 0, closeIntent, FLAG_IMMUTABLE)
-
-       return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(artist)
             .setSmallIcon(R.drawable.icon_play_arrow)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .addAction(R.drawable.ic_baseline_close_24, "STOP",
-                pendingCloseIntent)
+            .setStyle(MediaStyle())
+            .addAction(
+                R.drawable.ic_baseline_close_24, "STOP",
+                pendingCloseIntent
+            )
+            .addAction(
+                R.drawable.icon_previous_arrow, "Previous",
+                pendingPreviousTrackIntent
+            )
+            .addAction(
+                resumePauseActionIconId, "PlayPause",
+                pendingResumePauseIntent
+            )
+            .addAction(
+                R.drawable.icon_next_arrow, "Next",
+                pendingNextTrackIntent
+            )
             .build()
     }
 
     private fun updateNotification(track: ListViewTrack) {
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        val notification = createNotification(track.name, track.artist)
+        title = track.name
+        artist = track.artist
+        val notification = createNotification(true)
+
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 }
