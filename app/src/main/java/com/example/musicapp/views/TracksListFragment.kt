@@ -1,20 +1,20 @@
 package com.example.musicapp.views
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.musicapp.R
 import com.example.musicapp.adapters.TrackClickListener
 import com.example.musicapp.adapters.TracksListAdapter
 import com.example.musicapp.databinding.FragmentTracksListBinding
 import com.example.musicapp.models.ListViewTrack
+import com.example.musicapp.viewmodels.InsertTracksViewModel
 import com.example.musicapp.viewmodels.TrackListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -28,6 +28,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
     @Inject
     lateinit var adapter: TracksListAdapter
     private val viewModel: TrackListViewModel by activityViewModels() //getting shared view model
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -109,4 +110,6 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
     override fun onClick(currentListViewTrack: ListViewTrack, position: Int) {
         viewModel.updateTracks(currentListViewTrack, position)
     }
+
 }
+
