@@ -124,7 +124,7 @@
         app:tint="@color/track_playing_background" />
 
     <ImageButton
-        android:id="@+id/resume_pause_button"
+        android:id="@+id/resumePauseButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"

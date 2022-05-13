@@ -69,7 +69,7 @@
 
 
             <ImageButton
-                android:id="@+id/resume_pause_button"
+                android:id="@+id/resumePauseButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -106,7 +106,7 @@
                 android:background="@android:color/transparent"
                 android:src="@drawable/icon_previous_arrow"
                 app:layout_constraintBottom_toTopOf="@+id/trackProgressSeekBar"
-                app:layout_constraintRight_toLeftOf="@+id/resume_pause_button"
+                app:layout_constraintRight_toLeftOf="@+id/resumePauseButton"
                 app:layout_constraintTop_toTopOf="parent"
                 app:tint="@color/track_playing_background" />
 

@@ -24,6 +24,7 @@ interface ExoMusicPlayer {
 
 interface ExoMusicPlayerService {
     fun build(context: Context)
+    fun onStateChanged(action: (Int) -> (Unit))
     fun setOnTrackChangedListener(action: (ListViewTrack) -> Unit)
     fun onStop()
 }

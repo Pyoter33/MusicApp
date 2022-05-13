@@ -1,6 +1,5 @@
 package com.example.musicapp.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.musicapp.models.ListViewTrack
 import com.example.musicapp.musicplayers.ExoMusicPlayer
@@ -8,7 +7,6 @@ import com.example.musicapp.musicplayers.MusicPlayerStates
 import com.example.musicapp.usecases.TrackUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,7 +31,7 @@ class TrackListViewModel @Inject constructor(
     private val _trackProgression = MutableLiveData<Int>()
     val trackProgression: LiveData<Int> = _trackProgression
 
-    private val _isCurrentPaused = MutableLiveData(false)
+    private val _isCurrentPaused = MutableLiveData<Boolean>()
     val isCurrentPaused: LiveData<Boolean> = _isCurrentPaused
 
     private var currentPosition: Int? = null

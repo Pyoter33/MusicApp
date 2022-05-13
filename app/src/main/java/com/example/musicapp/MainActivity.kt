@@ -6,15 +6,13 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.activityViewModels
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.musicapp.services.MusicPlayerService
-import com.example.musicapp.services.ServiceBinder
 import com.example.musicapp.viewmodels.InsertTracksViewModel
 import com.example.musicapp.viewmodels.TrackListViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,9 +32,33 @@ class MainActivity : AppCompatActivity() {
 
     private val insertTracksViewModel: InsertTracksViewModel by viewModels()
 
-    private val broadcastReceiver = object : BroadcastReceiver() { //finish activity if service is stopped
+    private val closeActivityBroadcastReceiver = object : BroadcastReceiver() { //finish activity if service is stopped
         override fun onReceive(context: Context?, intent: Intent?) {
             finish()
+        }
+    }
+
+    private val resumePauseBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            viewModel.isCurrentPaused.value?.let { value ->
+                if (value) {
+                    viewModel.resumeTrack()
+                } else {
+                    viewModel.pauseTrack()
+                }
+            }
+        }
+    }
+
+    private val nextTrackBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            viewModel.playNextTrack()
+        }
+    }
+
+    private val previousTrackBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            viewModel.playPreviousTrack()
         }
     }
 
@@ -53,21 +75,32 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val closeActivityFilter = IntentFilter("android.intent.CLOSE_ACTIVITY")
+        val resumePauseFilter = IntentFilter("android.intent.RESUME_PAUSE_TRACK")
+        val previousTrackFilter = IntentFilter("android.intent.PLAY_PREVIOUS_TRACK")
+        val nextTrackFilter = IntentFilter("android.intent.PLAY_NEXT_TRACK")
+
+        registerReceiver(closeActivityBroadcastReceiver, closeActivityFilter)
+        registerReceiver(resumePauseBroadcastReceiver, resumePauseFilter)
+        registerReceiver(previousTrackBroadcastReceiver, previousTrackFilter)
+        registerReceiver(nextTrackBroadcastReceiver, nextTrackFilter)
+
         checkPermissions()
-        val filter = IntentFilter("android.intent.CLOSE_ACTIVITY")
-        registerReceiver(broadcastReceiver, filter)
         startService()
     }
 
     override fun onStart() {
         super.onStart()
-
         insertTracksViewModel.insertTracks()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(broadcastReceiver)
+        unregisterReceiver(closeActivityBroadcastReceiver)
+        unregisterReceiver(resumePauseBroadcastReceiver)
+        unregisterReceiver(previousTrackBroadcastReceiver)
+        unregisterReceiver(nextTrackBroadcastReceiver)
         unbindService(connection)
     }
 

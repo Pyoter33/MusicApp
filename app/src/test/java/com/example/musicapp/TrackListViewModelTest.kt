@@ -55,10 +55,8 @@ class TrackListViewModelTest {
         viewModel.trackList
 
         //then
-        println(viewModel.trackList.value?.first().toString())
-
         assertEquals(expectedSize, viewModel.trackList.value?.size)
-        assertThat(viewModel.trackList.value?.first()).isEqualToComparingFieldByFieldRecursively(expectedList.first())
+        assertThat(viewModel.trackList.value?.first()).isEqualTo(expectedList.first())
     }
 
     @Test
