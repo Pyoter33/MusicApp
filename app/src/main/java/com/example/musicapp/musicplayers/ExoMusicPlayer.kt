@@ -19,6 +19,7 @@ interface ExoMusicPlayer {
     fun initialize(track: ListViewTrack)
     fun onPause()
     fun onResume()
+    fun onStop()
     fun onSeek(timeStamp: Int)
 }
 
@@ -26,11 +27,12 @@ interface ExoMusicPlayerService {
     fun build(context: Context)
     fun onStateChanged(action: (Int) -> (Unit))
     fun setOnTrackChangedListener(action: (ListViewTrack) -> Unit)
-    fun onStop()
+    fun onRelease()
 }
 
 interface MusicPlayerStates {
     companion object {
+        const val STATE_IDLE = Player.STATE_IDLE
         const val STATE_ENDED = Player.STATE_ENDED
         const val STATE_PAUSED = 5
         const val STATE_RESUMED = 6
@@ -43,6 +45,8 @@ class ExoMusicPlayerImpl @Inject constructor() :
 
     private lateinit var exoPlayer: ExoPlayer
     private lateinit var currentTrack: ListViewTrack
+    private lateinit var trackChangeListener: Player.Listener
+    private lateinit var stateChangeListener: Player.Listener
 
     override fun build(context: Context) {
         exoPlayer = ExoPlayer.Builder(context).build()
@@ -75,37 +79,47 @@ class ExoMusicPlayerImpl @Inject constructor() :
         exoPlayer.stop()
     }
 
+    override fun onRelease() {
+        exoPlayer.removeListener(trackChangeListener)
+        exoPlayer.removeListener(stateChangeListener)
+        exoPlayer.release()
+    }
+
     override fun onSeek(timeStamp: Int) {
         exoPlayer.seekTo(timeStamp.toLong())
     }
 
     override fun setOnTrackChangedListener(action: (ListViewTrack) -> Unit) {
-        exoPlayer.addListener(object : Player.Listener {
+        trackChangeListener = object : Player.Listener {
             override fun onTracksChanged(
                 trackGroups: TrackGroupArray,
                 trackSelections: TrackSelectionArray
             ) {
                 action(currentTrack)
             }
-        })
+        }
+        exoPlayer.addListener(trackChangeListener)
     }
 
     override fun onStateChanged(action: (Int) -> Unit) {
-        exoPlayer.addListener(object : Player.Listener {
+        stateChangeListener = object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
                 when (state) {
                     Player.STATE_ENDED -> {
                         action(MusicPlayerStates.STATE_ENDED)
                     }
+                    Player.STATE_IDLE -> {
+                        action(MusicPlayerStates.STATE_IDLE)
+                    }
                 }
             }
-
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                 when (playWhenReady) {
                     true -> action(MusicPlayerStates.STATE_RESUMED)
                     false -> action(MusicPlayerStates.STATE_PAUSED) //combining two listeners into one
                 }
             }
-        })
+        }
+        exoPlayer.addListener(stateChangeListener)
     }
 }

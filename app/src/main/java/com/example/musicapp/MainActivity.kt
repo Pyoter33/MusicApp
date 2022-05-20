@@ -1,13 +1,12 @@
 package com.example.musicapp
 
 import android.Manifest
-import android.app.Activity
 import android.content.*
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.os.IBinder
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -17,18 +16,14 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.example.musicapp.other.DirectoryObserver
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.musicapp.services.MusicPlayerService
-import com.example.musicapp.viewmodels.InsertTracksViewModel
+import com.example.musicapp.viewmodels.UpdateTracksViewModel
 import com.example.musicapp.viewmodels.TrackListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-private lateinit var navController: NavController
-
     companion object {
         private const val REQUEST_EXTERNAL_STORAGE = 1
         private val PERMISSIONS_STORAGE = arrayOf(
@@ -36,9 +31,9 @@ private lateinit var navController: NavController
         )
     }
 
+    private lateinit var navController: NavController
     private val viewModel: TrackListViewModel by viewModels() //shared view model for future fragments
-
-    private val insertTracksViewModel: InsertTracksViewModel by viewModels()
+    private val updateTracksViewModel: UpdateTracksViewModel by viewModels()
 
     private val closeActivityBroadcastReceiver = object : BroadcastReceiver() { //finish activity if service is stopped
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -70,6 +65,12 @@ private lateinit var navController: NavController
         }
     }
 
+    private val reloadTracksBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            updateTracksViewModel.insertTracks()
+        }
+    }
+
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
             viewModel.registerListener()
@@ -83,45 +84,29 @@ private lateinit var navController: NavController
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        Toast.makeText(this,"on Create",Toast.LENGTH_SHORT).show()
         checkPermissions()
 
-        val navHostFragment=supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
-        navController=navHostFragment.findNavController()
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
+        navController = navHostFragment.findNavController()
 
         setupActionBarWithNavController(navController)
         val closeActivityFilter = IntentFilter("android.intent.CLOSE_ACTIVITY")
         val resumePauseFilter = IntentFilter("android.intent.RESUME_PAUSE_TRACK")
         val previousTrackFilter = IntentFilter("android.intent.PLAY_PREVIOUS_TRACK")
         val nextTrackFilter = IntentFilter("android.intent.PLAY_NEXT_TRACK")
+        val reloadTracksFilter = IntentFilter("android.intent.RELOAD_TRACKS")
 
         registerReceiver(closeActivityBroadcastReceiver, closeActivityFilter)
         registerReceiver(resumePauseBroadcastReceiver, resumePauseFilter)
         registerReceiver(previousTrackBroadcastReceiver, previousTrackFilter)
         registerReceiver(nextTrackBroadcastReceiver, nextTrackFilter)
-
-        checkPermissions()
+        registerReceiver(reloadTracksBroadcastReceiver, reloadTracksFilter)
         startService()
-    }
-
-    private fun insertTracksIfPersmissionGranted() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            insertTracksViewModel.insertTracks()
-        }
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
     override fun onStart() {
         super.onStart()
-        insertTracksIfPersmissionGranted()
+        insertTracksIfPermissionGranted()
     }
 
     override fun onDestroy() {
@@ -130,7 +115,34 @@ private lateinit var navController: NavController
         unregisterReceiver(resumePauseBroadcastReceiver)
         unregisterReceiver(previousTrackBroadcastReceiver)
         unregisterReceiver(nextTrackBroadcastReceiver)
+        unregisterReceiver(reloadTracksBroadcastReceiver)
         unbindService(connection)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp() || super.onSupportNavigateUp()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>,
+                                            grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.i("insert", "permission result")
+                updateTracksViewModel.insertTracks()
+            }
+        }
+    }
+
+    private fun insertTracksIfPermissionGranted() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            updateTracksViewModel.insertTracks()
+        }
     }
 
     private fun startService() {
@@ -157,17 +169,4 @@ private lateinit var navController: NavController
             )
         }
     }
-
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>,
-                                            grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {             
-                insertTracksViewModel.insertTracks()
-            }
-        }
-    }
 }
-
-const val PERMISSION_GRANTED= Activity.RESULT_FIRST_USER

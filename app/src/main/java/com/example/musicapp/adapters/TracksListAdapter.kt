@@ -42,7 +42,7 @@ class TracksListAdapter @Inject constructor() :
             binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(currentListViewTrack.length)
 
             binding.root.setOnClickListener {
-                listener.onClick(currentListViewTrack, adapterPosition)
+                listener.onClick(adapterPosition)
             }
         }
 
@@ -69,5 +69,5 @@ class TrackDiffUtil : DiffUtil.ItemCallback<ListViewTrack>() {
 }
 
 interface TrackClickListener {
-    fun onClick(currentListViewTrack: ListViewTrack, position: Int)
+    fun onClick(position: Int)
 }

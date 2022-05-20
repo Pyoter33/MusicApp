@@ -49,7 +49,7 @@ class TrackDetailsFragment @Inject constructor() : Fragment(), SeekBar.OnSeekBar
 
     private fun observeCurrentTrack() {
         viewModel.currentTrack.observe(viewLifecycleOwner) {
-            binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(it.length)
+            binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(it?.length ?: 0)
         }
     }
 

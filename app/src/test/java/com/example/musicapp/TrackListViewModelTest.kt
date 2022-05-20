@@ -1,10 +1,9 @@
 package com.example.musicapp
 
-import com.example.musicapp.database.Track
+import com.example.musicapp.repository.Track
 import com.example.musicapp.models.ListViewTrack
 import com.example.musicapp.musicplayers.ExoMusicPlayer
-import com.example.musicapp.repository.TrackRepository
-import com.example.musicapp.usecases.TrackUseCase
+import com.example.musicapp.usecases.GetTracksUseCase
 import com.example.musicapp.viewmodels.TrackListViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flowOf
@@ -17,15 +16,20 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import org.junit.Assert.*
 import org.assertj.core.api.Assertions.assertThat
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class TrackListViewModelTest {
 
     @Mock
-    private lateinit var useCase: TrackUseCase
+    private lateinit var useCase: GetTracksUseCase
 
     @Mock
     private lateinit var player: ExoMusicPlayer
@@ -40,43 +44,74 @@ class TrackListViewModelTest {
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
+
+    fun <T> LiveData<T>.getOrAwaitValue( //await data from flow with as live data
+        time: Long = 2,
+        timeUnit: TimeUnit = TimeUnit.SECONDS
+    ): T {
+        var data: T? = null
+        val latch = CountDownLatch(1)
+        val observer = object : Observer<T> {
+            override fun onChanged(o: T?) {
+                data = o
+                latch.countDown()
+                this@getOrAwaitValue.removeObserver(this)
+            }
+        }
+
+        this.observeForever(observer)
+
+        // Don't wait indefinitely if the LiveData is not set.
+        if (!latch.await(time, timeUnit)) {
+            throw TimeoutException("LiveData value was never set.")
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        return data as T
+    }
+
     @Test
     fun shouldGetTrackListNonEmpty() {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
-        val testTrack2 = Track(2, "", "", "",0 )
-        val testViewTrack1 = ListViewTrack(1, "", "", 0,"" )
-        val testViewTrack2 = ListViewTrack(2, "", "", 0,"" )
+        val testTrack2 = Track(2, "", "", "", 0)
+        val testViewTrack1 = ListViewTrack(1, "", "", 0, "")
+        val testViewTrack2 = ListViewTrack(2, "", "", 0, "")
         val expectedSize = 2
         val expectedList = listOf(testViewTrack1, testViewTrack2)
-        runBlocking { whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2))) }
+        whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2)))
 
         //when
         viewModel.trackList
 
         //then
-        assertEquals(expectedSize, viewModel.trackList.value?.size)
-        assertThat(viewModel.trackList.value?.first()).isEqualTo(expectedList.first())
+        assertEquals(expectedSize, viewModel.trackList.getOrAwaitValue().size)
+        assertThat(viewModel.trackList.getOrAwaitValue().first()).isEqualTo(expectedList.first())
     }
 
     @Test
     fun shouldGetTrackListEmpty() {
         //given
         val expectedSize = 0
-        runBlocking { whenever(useCase.getTrackList()).thenReturn(flowOf(listOf())) }
+        whenever(useCase.getTrackList()).thenReturn(flowOf(listOf()))
 
         //when
         viewModel.trackList
 
         //then
-        assertEquals(expectedSize, viewModel.trackList.value?.size)
+        assertEquals(expectedSize, viewModel.trackList.getOrAwaitValue().size)
     }
 
     @Test
     fun shouldResumeTrack() {
         //given
+        val testTrack1 = Track(1, "", "", "", 0)
+        val expectedPosition = 0
         val expectedFlowValue = 1
         whenever(player.trackPosition).thenReturn(flowOf(expectedFlowValue))
+        whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1)))
+        viewModel.trackList.getOrAwaitValue()
+        viewModel.updateTracks(expectedPosition)
 
         //when
         viewModel.resumeTrack()
@@ -88,6 +123,14 @@ class TrackListViewModelTest {
 
     @Test
     fun shouldPauseTrack() {
+        //given
+        val testTrack1 = Track(1, "", "", "", 0)
+        val expectedPosition = 0
+        whenever(player.trackPosition).thenReturn(flowOf())
+        whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1)))
+        viewModel.trackList.getOrAwaitValue()
+        viewModel.updateTracks(expectedPosition)
+
         //when
         viewModel.pauseTrack()
 
@@ -98,42 +141,46 @@ class TrackListViewModelTest {
     @Test
     fun shouldUpdateTracks() {
         //given
-        val testViewTrack = ListViewTrack(1, "", "", 0, "")
+        val testTrack1 = Track(1, "", "", "", 0)
         val expectedTrack = ListViewTrack(1, "", "", 0, "", true)
         val expectedPosition = 0
         val expectedFlowValue = 1
         whenever(player.trackPosition).thenReturn(flowOf(expectedFlowValue))
+        whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1)))
+        viewModel.trackList.getOrAwaitValue()
 
         //when
-        viewModel.updateTracks(testViewTrack, expectedPosition)
+        viewModel.updateTracks(expectedPosition)
 
         //then
         verify(player).initialize(any())
-        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(expectedTrack)
+        assertThat(viewModel.currentTrack.value).isEqualTo(expectedTrack)
         assertEquals(expectedFlowValue, viewModel.trackProgression.value)
         assertEquals(expectedPosition, viewModel.positionToNotify.value)
+
     }
 
     @Test
     fun shouldPlayNextTrackNonEnd() {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
-        val testTrack2 = Track(2, "", "", "",0 )
-        val testViewTrack1 = ListViewTrack(1, "", "", 0,"" )
-        val testViewTrack2 = ListViewTrack(2, "", "", 0,"", true)
+        val testTrack2 = Track(2, "", "", "", 0)
+        val testViewTrack1 = ListViewTrack(1, "", "", 0, "")
+        val testViewTrack2 = ListViewTrack(2, "", "", 0, "", true)
 
         val currentPosition = 0
         val expectedPosition = 1
 
-        runBlocking { whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2))) }
+        whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2)))
         whenever(player.trackPosition).thenReturn(flowOf())
-        viewModel.updateTracks(testViewTrack1, currentPosition)
+        viewModel.trackList.getOrAwaitValue()
+        viewModel.updateTracks(currentPosition)
 
         //when
         viewModel.playNextTrack()
 
         //then
-        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(testViewTrack2)
+        assertThat(viewModel.currentTrack.value).isEqualTo(testViewTrack2)
         assertEquals(expectedPosition, viewModel.positionToNotify.value)
     }
 
@@ -141,21 +188,24 @@ class TrackListViewModelTest {
     fun shouldPlayNextTrackEnd() {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
-        val testTrack2 = Track(2, "", "", "",0 )
-        val testViewTrack2 = ListViewTrack(2, "", "", 0,"", true)
+        val testTrack2 = Track(2, "", "", "", 0)
+        val testViewTrack2 = ListViewTrack(2, "", "", 0, "", true)
 
         val currentPosition = 1
         val expectedPosition = 1
 
-        runBlocking { whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2))) }
+        whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2)))
         whenever(player.trackPosition).thenReturn(flowOf())
-        viewModel.updateTracks(testViewTrack2, currentPosition)
+        viewModel.trackList.getOrAwaitValue()
+        viewModel.updateTracks(currentPosition)
 
         //when
         viewModel.playNextTrack()
 
         //then
-        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(testViewTrack2)
+        assertThat(viewModel.currentTrack.value).isEqualTo(
+            testViewTrack2
+        )
         assertEquals(expectedPosition, viewModel.positionToNotify.value)
     }
 
@@ -163,22 +213,25 @@ class TrackListViewModelTest {
     fun shouldPlayPreviousTrackNonBegin() {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
-        val testTrack2 = Track(2, "", "", "",0 )
-        val testViewTrack1 = ListViewTrack(1, "", "", 0,"", true )
-        val testViewTrack2 = ListViewTrack(2, "", "", 0,"")
+        val testTrack2 = Track(2, "", "", "", 0)
+        val testViewTrack1 = ListViewTrack(1, "", "", 0, "", true)
+        val testViewTrack2 = ListViewTrack(2, "", "", 0, "")
 
         val currentPosition = 1
         val expectedPosition = 0
 
-        runBlocking { whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2))) }
+        whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2)))
         whenever(player.trackPosition).thenReturn(flowOf())
-        viewModel.updateTracks(testViewTrack2, currentPosition)
+        viewModel.trackList.getOrAwaitValue()
+        viewModel.updateTracks(currentPosition)
 
         //when
         viewModel.playPreviousTrack()
 
         //then
-        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(testViewTrack1)
+        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(
+            testViewTrack1
+        )
         assertEquals(expectedPosition, viewModel.positionToNotify.value)
     }
 
@@ -186,21 +239,24 @@ class TrackListViewModelTest {
     fun shouldPlayPreviousTrackBegin() {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
-        val testTrack2 = Track(2, "", "", "",0 )
-        val testViewTrack1 = ListViewTrack(1, "", "", 0,"", true )
+        val testTrack2 = Track(2, "", "", "", 0)
+        val testViewTrack1 = ListViewTrack(1, "", "", 0, "", true)
 
         val currentPosition = 0
         val expectedPosition = 0
 
-        runBlocking { whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2))) }
+        whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2)))
         whenever(player.trackPosition).thenReturn(flowOf())
-        viewModel.updateTracks(testViewTrack1, currentPosition)
+        viewModel.trackList.getOrAwaitValue()
+        viewModel.updateTracks(currentPosition)
 
         //when
         viewModel.playPreviousTrack()
 
         //then
-        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(testViewTrack1)
+        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(
+            testViewTrack1
+        )
         assertEquals(expectedPosition, viewModel.positionToNotify.value)
     }
 

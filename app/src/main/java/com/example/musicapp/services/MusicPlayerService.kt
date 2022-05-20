@@ -6,9 +6,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Binder
-import android.os.Build
-import android.os.IBinder
+import android.os.*
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.media.app.NotificationCompat.MediaStyle
@@ -44,31 +43,70 @@ class MusicPlayerService @Inject constructor() : Service() {
     }
 
     private val closeIntent by lazy { Intent("android.intent.CLOSE_ACTIVITY") }
-    private val pendingCloseIntent by lazy { PendingIntent.getBroadcast(this, 0, closeIntent, FLAG_IMMUTABLE) }
+    private val pendingCloseIntent by lazy {
+        PendingIntent.getBroadcast(
+            this,
+            0,
+            closeIntent,
+            FLAG_IMMUTABLE
+        )
+    }
 
     private val resumePauseIntent by lazy { Intent("android.intent.RESUME_PAUSE_TRACK") }
-    private val pendingResumePauseIntent by lazy { PendingIntent.getBroadcast(this, 0, resumePauseIntent, FLAG_IMMUTABLE) }
+    private val pendingResumePauseIntent by lazy {
+        PendingIntent.getBroadcast(
+            this,
+            0,
+            resumePauseIntent,
+            FLAG_IMMUTABLE
+        )
+    }
 
     private val nextTrackIntent by lazy { Intent("android.intent.PLAY_NEXT_TRACK") }
-    private val pendingNextTrackIntent by lazy { PendingIntent.getBroadcast(this, 0, nextTrackIntent, FLAG_IMMUTABLE) }
+    private val pendingNextTrackIntent by lazy {
+        PendingIntent.getBroadcast(
+            this,
+            0,
+            nextTrackIntent,
+            FLAG_IMMUTABLE
+        )
+    }
 
     private val previousTrackIntent by lazy { Intent("android.intent.PLAY_PREVIOUS_TRACK") }
-    private val pendingPreviousTrackIntent by lazy { PendingIntent.getBroadcast(this, 0, previousTrackIntent, FLAG_IMMUTABLE) }
+    private val pendingPreviousTrackIntent by lazy {
+        PendingIntent.getBroadcast(
+            this,
+            0,
+            previousTrackIntent,
+            FLAG_IMMUTABLE
+        )
+    }
+
+    private val reloadTracksIntent by lazy { Intent("android.intent.RELOAD_TRACKS") }
+    private val pendingReloadTracksIntent by lazy {
+        PendingIntent.getBroadcast(
+            this,
+            0,
+            reloadTracksIntent,
+            FLAG_IMMUTABLE
+        )
+    }
 
     private val notificationManager by lazy { getSystemService(NOTIFICATION_SERVICE) as NotificationManager }
 
     @Inject
     lateinit var musicPlayer: ExoMusicPlayerService
 
-    private val broadcastReceiver = object : BroadcastReceiver() { //stop service on notification click
-        override fun onReceive(
-            context: Context?,
-            intent: Intent?
-        ) {
-            stopForeground(true)
-            stopSelf()
+    private val broadcastReceiver =
+        object : BroadcastReceiver() { //stop service on notification click
+            override fun onReceive(
+                context: Context?,
+                intent: Intent?
+            ) {
+                stopForeground(true)
+                stopSelf()
+            }
         }
-    }
 
     override fun onCreate() {
         super.onCreate()
@@ -80,13 +118,22 @@ class MusicPlayerService @Inject constructor() : Service() {
         setOnTrackChangedListener()
         setOnStateChangeListener()
     }
-
+    private val fileObserver =
+        object : FileObserver("${Environment.getExternalStorageDirectory()}/Tracks") {
+            override fun onEvent(event: Int, path: String?) {
+                if (event == CREATE || event == DELETE) {
+                    pendingReloadTracksIntent.send()
+                    Log.i("reload", "send")
+                }
+            }
+        }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             addNotificationChannel(NOTIFICATION_CHANNEL_ID)
         }
 
+        fileObserver.startWatching()
         val notification = createNotification(false)
         startForeground(NOTIFICATION_ID, notification)
         return START_NOT_STICKY
@@ -94,7 +141,7 @@ class MusicPlayerService @Inject constructor() : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        musicPlayer.onStop()
+        musicPlayer.onRelease()
         unregisterReceiver(broadcastReceiver)
     }
 
@@ -121,6 +168,12 @@ class MusicPlayerService @Inject constructor() : Service() {
                 }
                 MusicPlayerStates.STATE_RESUMED -> {
                     val notification = createNotification(true)
+                    notificationManager.notify(NOTIFICATION_ID, notification)
+                }
+                MusicPlayerStates.STATE_IDLE -> {
+                    artist = ARTIST_PLACEHOLDER
+                    title = TITLE_PLACEHOLDER
+                    val notification = createNotification(false)
                     notificationManager.notify(NOTIFICATION_ID, notification)
                 }
             }
