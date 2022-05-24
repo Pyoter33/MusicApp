@@ -16,12 +16,4 @@ class TrackRepositoryImpl(
         dao.insertAndDeleteInTransaction(tracks, paths)
     }
 
-
-    //    override suspend fun insertAll(tracks: List<Track>) {
-//        dao.insertAll(tracks)
-//    }
-//
-//    override suspend fun deleteTracks(paths: List<String>) {
-//        dao.deleteTracks(paths)
-//    }
 }

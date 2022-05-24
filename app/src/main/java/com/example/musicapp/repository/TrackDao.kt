@@ -23,7 +23,6 @@ interface TrackDao{
 
     @Transaction
     suspend fun insertAndDeleteInTransaction(tracks: List<Track>, paths: List<String>) {
-        // Anything inside this method runs in a single transaction.
         insertAll(tracks)
         deleteTracks(paths)
     }

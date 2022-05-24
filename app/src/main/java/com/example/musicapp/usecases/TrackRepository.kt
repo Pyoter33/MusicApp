@@ -8,10 +8,5 @@ interface TrackRepository {
 
     suspend fun getTrackById(id: Int): Track?
 
-//    suspend fun insertAll(tracks: List<Track>)
-//
-//    suspend fun deleteTracks(paths: List<String>)
-
     suspend fun insertAndDeleteInTransaction(tracks: List<Track>, paths: List<String>)
-
 }

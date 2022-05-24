@@ -5,6 +5,7 @@ import android.content.*
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private lateinit var path: String
     private lateinit var navController: NavController
     private val viewModel: TrackListViewModel by viewModels() //shared view model for future fragments
     private val updateTracksViewModel: UpdateTracksViewModel by viewModels()
@@ -67,7 +69,7 @@ class MainActivity : AppCompatActivity() {
 
     private val reloadTracksBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            updateTracksViewModel.insertTracks()
+            updateTracksViewModel.updateTracks(path)
         }
     }
 
@@ -84,6 +86,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        path = "${Environment.getExternalStorageDirectory()}/Tracks"
         checkPermissions()
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
@@ -129,8 +132,7 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_EXTERNAL_STORAGE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.i("insert", "permission result")
-                updateTracksViewModel.insertTracks()
+                updateTracksViewModel.updateTracks(path)
             }
         }
     }
@@ -141,7 +143,7 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.READ_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            updateTracksViewModel.insertTracks()
+            updateTracksViewModel.updateTracks(path)
         }
     }
 

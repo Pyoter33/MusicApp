@@ -5,11 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.os.SystemClock
 import android.view.View
 import android.widget.ImageButton
-import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -17,20 +16,49 @@ import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.platform.app.InstrumentationRegistry
 import com.example.musicapp.adapters.TracksListAdapter
+import com.example.musicapp.repository.Track
+import com.example.musicapp.repository.TrackDatabase
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.Description
-import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
 import org.hamcrest.core.IsNot.not
-import org.junit.After
-import org.junit.Rule
-import org.junit.Test
+import org.junit.*
+
 
 
 class TrackListViewTest {
 
     @get:Rule
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    private lateinit var db: TrackDatabase
+    companion object {
+
+    }
+
+    @Before
+    fun setDatabase() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        db = Room.inMemoryDatabaseBuilder(context, TrackDatabase::class.java).allowMainThreadQueries().build()
+        val dao = db.trackDao
+
+        runBlocking {
+            dao.insertAll(
+                listOf(
+                    Track(0, "Title 1", "Artist 1", "", 2000),
+                    Track(0, "Title 2", "Artist 2", "", 2000),
+                    Track(0, "Title 3", "Artist 3", "", 2000)
+                )
+            )
+        }
+    }
+
+    @After
+    fun closeDatabase() {
+        db.close()
+    }
+
 
     private fun recyclerViewAtPositionCheckBackgroundDrawable(
         position: Int,
@@ -111,6 +139,15 @@ class TrackListViewTest {
             drawable.draw(canvas)
         }
         return result
+    }
+
+    @Test
+    fun shouldFirstTrackName() {
+        onView(withId(R.id.viewRecyclerTracks))
+            .perform(RecyclerViewActions.actionOnItemAtPosition<TracksListAdapter.TrackViewHolder>(0, click()))
+
+        onView(withId(R.id.textCurrentTrackName))
+            .check(matches(withText("Title 1")))
     }
 
     @Test

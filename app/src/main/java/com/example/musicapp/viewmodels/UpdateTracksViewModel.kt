@@ -22,20 +22,19 @@ class UpdateTracksViewModel @Inject constructor(
     private val getTracksUseCase: GetTracksUseCase
 ) : ViewModel() {
 
-    fun insertTracks() {
-        val path = "${Environment.getExternalStorageDirectory()}/Tracks"
+    fun updateTracks(path: String) {
         val file = File(path)
         val list = file.list()
         val mmr = MediaMetadataRetriever()
         val listTracks = mutableListOf<Track>()
         val listPaths = mutableListOf<String>()
         for (elem in list!!) {
-            Log.i("insert", elem.toString())
             mmr.setDataSource("$path/$elem")
             val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
             val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
             val fullPath = "$path/$elem"
             val lengthString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            val a = mmr.embeddedPicture
             val length = Integer.parseInt(lengthString)
             listTracks.add(Track(0, title, artist, fullPath, length))
             listPaths.add(fullPath)
