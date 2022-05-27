@@ -8,7 +8,6 @@ import javax.inject.Inject
 class GetTracksUseCase @Inject constructor(private val repository: TrackRepository) {
 
     fun getTrackList(): Flow<List<Track>> {
-        Log.i("insert", "get tracks use case")
         return repository.getAll()
     }
 }

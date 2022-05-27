@@ -75,8 +75,8 @@ class TrackListViewModelTest {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
         val testTrack2 = Track(2, "", "", "", 0)
-        val testViewTrack1 = ListViewTrack(1, "", "", 0, "")
-        val testViewTrack2 = ListViewTrack(2, "", "", 0, "")
+        val testViewTrack1 = ListViewTrack(1, "", "", 0, "", byteArrayOf())
+        val testViewTrack2 = ListViewTrack(2, "", "", 0, "", byteArrayOf())
         val expectedSize = 2
         val expectedList = listOf(testViewTrack1, testViewTrack2)
         whenever(useCase.getTrackList()).thenReturn(flowOf(listOf(testTrack1, testTrack2)))
@@ -142,7 +142,7 @@ class TrackListViewModelTest {
     fun shouldUpdateTracks() {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
-        val expectedTrack = ListViewTrack(1, "", "", 0, "", true)
+        val expectedTrack = ListViewTrack(1, "", "", 0, "", byteArrayOf(),true)
         val expectedPosition = 0
         val expectedFlowValue = 1
         whenever(player.trackPosition).thenReturn(flowOf(expectedFlowValue))
@@ -165,8 +165,8 @@ class TrackListViewModelTest {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
         val testTrack2 = Track(2, "", "", "", 0)
-        val testViewTrack1 = ListViewTrack(1, "", "", 0, "")
-        val testViewTrack2 = ListViewTrack(2, "", "", 0, "", true)
+        val testViewTrack1 = ListViewTrack(1, "", "", 0, "", byteArrayOf())
+        val testViewTrack2 = ListViewTrack(2, "", "", 0, "", byteArrayOf(),true)
 
         val currentPosition = 0
         val expectedPosition = 1
@@ -189,7 +189,7 @@ class TrackListViewModelTest {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
         val testTrack2 = Track(2, "", "", "", 0)
-        val testViewTrack2 = ListViewTrack(2, "", "", 0, "", true)
+        val testViewTrack2 = ListViewTrack(2, "", "", 0, "", byteArrayOf(), true)
 
         val currentPosition = 1
         val expectedPosition = 1
@@ -214,8 +214,8 @@ class TrackListViewModelTest {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
         val testTrack2 = Track(2, "", "", "", 0)
-        val testViewTrack1 = ListViewTrack(1, "", "", 0, "", true)
-        val testViewTrack2 = ListViewTrack(2, "", "", 0, "")
+        val testViewTrack1 = ListViewTrack(1, "", "", 0, "", byteArrayOf(),true)
+        val testViewTrack2 = ListViewTrack(2, "", "", 0, "", byteArrayOf())
 
         val currentPosition = 1
         val expectedPosition = 0
@@ -240,7 +240,7 @@ class TrackListViewModelTest {
         //given
         val testTrack1 = Track(1, "", "", "", 0)
         val testTrack2 = Track(2, "", "", "", 0)
-        val testViewTrack1 = ListViewTrack(1, "", "", 0, "", true)
+        val testViewTrack1 = ListViewTrack(1, "", "", 0, "", byteArrayOf(),true)
 
         val currentPosition = 0
         val expectedPosition = 0

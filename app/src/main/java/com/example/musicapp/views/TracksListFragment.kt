@@ -1,20 +1,30 @@
 package com.example.musicapp.views
 
+import android.Manifest
+import android.content.ContentResolver
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.musicapp.R
 import com.example.musicapp.adapters.TrackClickListener
 import com.example.musicapp.adapters.TracksListAdapter
 import com.example.musicapp.databinding.FragmentTracksListBinding
 import com.example.musicapp.viewmodels.TrackListViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import javax.inject.Inject
 
 
@@ -113,7 +123,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener 
     }
 
     private fun onTrackControllerLayoutClicked() {
-        binding.layoutTrackController.setOnClickListener{
+        binding.layoutTrackController.setOnClickListener {
             findNavController().navigate(TracksListFragmentDirections.actionTracksListFragmentToTrackDetailsFragment())
         }
     }

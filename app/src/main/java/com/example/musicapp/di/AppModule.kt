@@ -25,7 +25,7 @@ object AppModule {
     }
 
     @Provides
-    @Singleton //?
+    @Singleton
     fun provideTrackRepository(db: TrackDatabase): TrackRepository {
         return TrackRepositoryImpl(db.trackDao)
     }

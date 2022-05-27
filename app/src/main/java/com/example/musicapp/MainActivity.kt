@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.IBinder
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -26,7 +25,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     companion object {
-        private const val REQUEST_EXTERNAL_STORAGE = 1
+        private const val REQUEST_EXTERNAL_STORAGE_READ = 1
         private val PERMISSIONS_STORAGE = arrayOf(
             Manifest.permission.READ_EXTERNAL_STORAGE
         )
@@ -34,22 +33,23 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var path: String
     private lateinit var navController: NavController
-    private val viewModel: TrackListViewModel by viewModels() //shared view model for future fragments
+    private val trackListViewModel: TrackListViewModel by viewModels() //shared view model for future fragments
     private val updateTracksViewModel: UpdateTracksViewModel by viewModels()
 
-    private val closeActivityBroadcastReceiver = object : BroadcastReceiver() { //finish activity if service is stopped
-        override fun onReceive(context: Context?, intent: Intent?) {
-            finish()
+    private val closeActivityBroadcastReceiver =
+        object : BroadcastReceiver() { //finish activity if service is stopped
+            override fun onReceive(context: Context?, intent: Intent?) {
+                finish()
+            }
         }
-    }
 
     private val resumePauseBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            viewModel.isCurrentPaused.value?.let { value ->
+            trackListViewModel.isCurrentPaused.value?.let { value ->
                 if (value) {
-                    viewModel.resumeTrack()
+                    trackListViewModel.resumeTrack()
                 } else {
-                    viewModel.pauseTrack()
+                    trackListViewModel.pauseTrack()
                 }
             }
         }
@@ -57,13 +57,13 @@ class MainActivity : AppCompatActivity() {
 
     private val nextTrackBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            viewModel.playNextTrack()
+            trackListViewModel.playNextTrack()
         }
     }
 
     private val previousTrackBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            viewModel.playPreviousTrack()
+            trackListViewModel.playPreviousTrack()
         }
     }
 
@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
-            viewModel.registerListener()
+            trackListViewModel.registerListener()
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -89,7 +89,8 @@ class MainActivity : AppCompatActivity() {
         path = "${Environment.getExternalStorageDirectory()}/Tracks"
         checkPermissions()
 
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
         navController = navHostFragment.findNavController()
 
         setupActionBarWithNavController(navController)
@@ -126,11 +127,13 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>,
-                                            grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
+        if (requestCode == REQUEST_EXTERNAL_STORAGE_READ) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 updateTracksViewModel.updateTracks(path)
             }
@@ -159,15 +162,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkPermissions() {
-        val permission = ActivityCompat.checkSelfPermission(
+        val readPermission = ActivityCompat.checkSelfPermission(
             this,
             Manifest.permission.READ_EXTERNAL_STORAGE
         )
-        if (permission != PackageManager.PERMISSION_GRANTED) {
+        if (readPermission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
                 this,
                 PERMISSIONS_STORAGE,
-                REQUEST_EXTERNAL_STORAGE
+                REQUEST_EXTERNAL_STORAGE_READ
             )
         }
     }

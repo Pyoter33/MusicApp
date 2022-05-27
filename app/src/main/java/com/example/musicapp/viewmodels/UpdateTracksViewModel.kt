@@ -5,6 +5,7 @@ import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bumptech.glide.Glide
 import com.example.musicapp.repository.Track
 import com.example.musicapp.usecases.UpdateTracksUseCase
 import com.example.musicapp.usecases.GetTracksUseCase
@@ -24,29 +25,29 @@ class UpdateTracksViewModel @Inject constructor(
 
     fun updateTracks(path: String) {
         val file = File(path)
-        val list = file.list()
+        val list = file.list() ?: arrayOf()
         val mmr = MediaMetadataRetriever()
         val listTracks = mutableListOf<Track>()
         val listPaths = mutableListOf<String>()
-        for (elem in list!!) {
+        for (elem in list) {
             mmr.setDataSource("$path/$elem")
             val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
             val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
             val fullPath = "$path/$elem"
             val lengthString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-            val a = mmr.embeddedPicture
+            val imageByteArray = mmr.embeddedPicture
             val length = Integer.parseInt(lengthString)
-            listTracks.add(Track(0, title, artist, fullPath, length))
+            listTracks.add(Track(0, title, artist, fullPath, length, imageByteArray ?: byteArrayOf()))
             listPaths.add(fullPath)
         }
 
         viewModelScope.launch {
             getTracksUseCase.getTrackList().collect { list ->
 
-                val paths = list.map { it.path }.toSet()
+                val paths = list.map { it.path }.filter { it != "test" }.toSet()
                 val tracksToAdd = listTracks.filter { it.path !in paths }
                 val tracksToDelete = list.filter { it.path !in listPaths.toSet() }
-                updateTracksUseCase.updateTracks(tracksToAdd, tracksToDelete.map { it.path!! })
+                updateTracksUseCase.updateTracks(tracksToAdd, tracksToDelete.map { it.path })
 
                 coroutineContext.job.cancel()
             }

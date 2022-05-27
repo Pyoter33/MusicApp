@@ -1,6 +1,9 @@
 package com.example.musicapp.views
 
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +13,15 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.target.DrawableImageViewTarget
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.request.transition.Transition
 import com.example.musicapp.R
 import com.example.musicapp.databinding.FragmentTrackDetailsBinding
 import com.example.musicapp.viewmodels.TrackListViewModel
@@ -48,8 +60,26 @@ class TrackDetailsFragment @Inject constructor() : Fragment(), SeekBar.OnSeekBar
     }
 
     private fun observeCurrentTrack() {
-        viewModel.currentTrack.observe(viewLifecycleOwner) {
-            binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(it?.length ?: 0)
+        viewModel.currentTrack.observe(viewLifecycleOwner) { track ->
+            binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(track?.length ?: 0)
+            track?.imageByteArray?.let {
+                if (it.isNotEmpty()) {
+                    Glide.with(this).asBitmap().load(it).into(object: CustomTarget<Bitmap>(){
+                            override fun onResourceReady(
+                                resource: Bitmap,
+                                transition: Transition<in Bitmap>?
+                            ) {
+                                binding.viewImageTrack.setImageBitmap(resource)
+                            }
+
+                        override fun onLoadCleared(placeholder: Drawable?) {
+
+                        }
+                    })
+                } else {
+                    Glide.with(this).load(R.drawable.icon_music_note).into(binding.viewImageTrack)
+                }
+            }
         }
     }
 

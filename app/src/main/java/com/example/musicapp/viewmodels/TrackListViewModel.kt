@@ -1,5 +1,6 @@
 package com.example.musicapp.viewmodels
 
+import android.media.MediaMetadataRetriever
 import android.util.Log
 import androidx.lifecycle.*
 import com.example.musicapp.models.ListViewTrack
@@ -120,7 +121,8 @@ class TrackListViewModel @Inject constructor(
                         track.title ?: "Unknown",
                         track.author ?: "Unknown",
                         track.length ?: 0,
-                        track.path!!,
+                        track.path,
+                        track.imageByteArray,
                         isPlaying
                     )
                 )

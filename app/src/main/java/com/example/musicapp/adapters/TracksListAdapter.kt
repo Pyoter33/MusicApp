@@ -5,6 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.example.musicapp.R
 import com.example.musicapp.databinding.ItemTrackBinding
 import com.example.musicapp.models.ListViewTrack
 import java.text.SimpleDateFormat
@@ -40,6 +42,13 @@ class TracksListAdapter @Inject constructor() :
             binding.textTrackName.text = currentListViewTrack.name
             binding.textTrackArtist.text = currentListViewTrack.artist
             binding.textTrackLength.text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(currentListViewTrack.length)
+            currentListViewTrack.imageByteArray.let {
+                if (it.isNotEmpty()) {
+                    Glide.with(itemView).load(it).into(binding.viewImageTrack)
+                } else {
+                    Glide.with(itemView).load(R.drawable.icon_music_note).into(binding.viewImageTrack)
+                }
+            }
 
             binding.root.setOnClickListener {
                 listener.onClick(adapterPosition)
