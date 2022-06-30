@@ -1,12 +1,13 @@
 package com.example.musicapp
 
 import android.Manifest
+import android.app.Activity
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.*
 import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
-import android.os.IBinder
+import android.os.*
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -17,21 +18,43 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.example.musicapp.services.MusicPlayerService
-import com.example.musicapp.viewmodels.UpdateTracksViewModel
 import com.example.musicapp.viewmodels.TrackListViewModel
+import com.example.musicapp.viewmodels.UpdateTracksViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     companion object {
-        private const val REQUEST_EXTERNAL_STORAGE_READ = 1
-        private val PERMISSIONS_STORAGE = arrayOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        )
+        private const val REQUEST_PERMISSIONS = 1
+        private val PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        }
     }
 
-    private lateinit var path: String
+    lateinit var bluetoothAdapter: BluetoothAdapter
+
+    @Inject
+    lateinit var path: String
     private lateinit var navController: NavController
     private val trackListViewModel: TrackListViewModel by viewModels() //shared view model for future fragments
     private val updateTracksViewModel: UpdateTracksViewModel by viewModels()
@@ -69,7 +92,16 @@ class MainActivity : AppCompatActivity() {
 
     private val reloadTracksBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
+            Log.i("bluetooth", "create")
             updateTracksViewModel.updateTracks(path)
+        }
+
+    }
+
+    private val deleteTracksBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.i("bluetooth", "delete")
+            updateTracksViewModel.deleteTracks(path)
         }
     }
 
@@ -86,7 +118,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        path = "${Environment.getExternalStorageDirectory()}/Tracks"
         checkPermissions()
 
         val navHostFragment =
@@ -99,13 +130,16 @@ class MainActivity : AppCompatActivity() {
         val previousTrackFilter = IntentFilter("android.intent.PLAY_PREVIOUS_TRACK")
         val nextTrackFilter = IntentFilter("android.intent.PLAY_NEXT_TRACK")
         val reloadTracksFilter = IntentFilter("android.intent.RELOAD_TRACKS")
+        val deleteTracksFilter = IntentFilter("android.intent.DELETE_TRACKS")
 
         registerReceiver(closeActivityBroadcastReceiver, closeActivityFilter)
         registerReceiver(resumePauseBroadcastReceiver, resumePauseFilter)
         registerReceiver(previousTrackBroadcastReceiver, previousTrackFilter)
         registerReceiver(nextTrackBroadcastReceiver, nextTrackFilter)
         registerReceiver(reloadTracksBroadcastReceiver, reloadTracksFilter)
+        registerReceiver(deleteTracksBroadcastReceiver, deleteTracksFilter)
         startService()
+        getBluetoothAdapter()
     }
 
     override fun onStart() {
@@ -120,6 +154,7 @@ class MainActivity : AppCompatActivity() {
         unregisterReceiver(previousTrackBroadcastReceiver)
         unregisterReceiver(nextTrackBroadcastReceiver)
         unregisterReceiver(reloadTracksBroadcastReceiver)
+        unregisterReceiver(deleteTracksBroadcastReceiver)
         unbindService(connection)
     }
 
@@ -133,11 +168,16 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_EXTERNAL_STORAGE_READ) {
+        if (requestCode == REQUEST_PERMISSIONS) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 updateTracksViewModel.updateTracks(path)
             }
         }
+    }
+
+    private fun getBluetoothAdapter() {
+        val bluetoothManager = getSystemService(BluetoothManager::class.java)
+        bluetoothAdapter = bluetoothManager.adapter
     }
 
     private fun insertTracksIfPermissionGranted() {
@@ -161,16 +201,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun hasPermissions(context: Context, vararg permissions: String): Boolean =
+        permissions.all {
+            ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+
     private fun checkPermissions() {
-        val readPermission = ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        )
-        if (readPermission != PackageManager.PERMISSION_GRANTED) {
+        if (!hasPermissions(this, *PERMISSIONS)
+        ) {
             ActivityCompat.requestPermissions(
                 this,
-                PERMISSIONS_STORAGE,
-                REQUEST_EXTERNAL_STORAGE_READ
+                PERMISSIONS,
+                REQUEST_PERMISSIONS
             )
         }
     }

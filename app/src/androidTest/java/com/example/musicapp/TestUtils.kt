@@ -1,5 +1,7 @@
 package com.example.musicapp
 
+import android.app.Application
+import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -9,8 +11,17 @@ import android.view.View
 import android.widget.ImageButton
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.matcher.BoundedMatcher
+import androidx.test.runner.AndroidJUnitRunner
+import dagger.hilt.android.testing.HiltTestApplication
 import org.hamcrest.Description
 import org.hamcrest.TypeSafeMatcher
+
+class CustomTestRunner : AndroidJUnitRunner() {
+    override fun newApplication(cl: ClassLoader?, name: String?, context: Context?): Application {
+        return super.newApplication(cl, HiltTestApplication::class.java.name, context)
+    }
+}
+
 
 object TestUtils {
     fun recyclerViewAtPositionCheckBackgroundDrawable(

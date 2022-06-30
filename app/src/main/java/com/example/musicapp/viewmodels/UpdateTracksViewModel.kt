@@ -23,6 +23,10 @@ class UpdateTracksViewModel @Inject constructor(
     private val getTracksUseCase: GetTracksUseCase
 ) : ViewModel() {
 
+    companion object{
+        val ACCEPTED_EXTENSIONS = listOf("mp3", "oog", "m4a", "mp4")
+    }
+
     fun updateTracks(path: String) {
         val file = File(path)
         val list = file.list() ?: arrayOf()
@@ -30,26 +34,42 @@ class UpdateTracksViewModel @Inject constructor(
         val listTracks = mutableListOf<Track>()
         val listPaths = mutableListOf<String>()
         for (elem in list) {
-            mmr.setDataSource("$path/$elem")
-            val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
-            val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
             val fullPath = "$path/$elem"
+            if(!File(fullPath).exists()) continue
+            if(elem.substringAfter('.') !in ACCEPTED_EXTENSIONS) continue
+            mmr.setDataSource("$path/$elem")
+            val title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: elem.substringBefore('.')
+            val artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
             val lengthString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-            val imageByteArray = mmr.embeddedPicture
             val length = Integer.parseInt(lengthString)
-            listTracks.add(Track(0, title, artist, fullPath, length, imageByteArray ?: byteArrayOf()))
+            listTracks.add(Track(0, title, artist, fullPath, length))
             listPaths.add(fullPath)
         }
 
         viewModelScope.launch {
             getTracksUseCase.getTrackList().collect { list ->
-
-                val paths = list.map { it.path }.filter { it != "test" }.toSet()
+                val paths = list.map { it.path }.toSet()
                 val tracksToAdd = listTracks.filter { it.path !in paths }
                 val tracksToDelete = list.filter { it.path !in listPaths.toSet() }
                 updateTracksUseCase.updateTracks(tracksToAdd, tracksToDelete.map { it.path })
 
                 coroutineContext.job.cancel()
+            }
+        }
+    }
+
+    fun deleteTracks(path: String) {
+        val file = File(path)
+        val list = file.list() ?: arrayOf()
+        val listPaths = mutableListOf<String>()
+        for (elem in list) {
+            val fullPath = "$path/$elem"
+            listPaths.add(fullPath)
+        }
+        viewModelScope.launch {
+            getTracksUseCase.getTrackList().collect { list ->
+                val tracksToDelete = list.filter { it.path !in listPaths.toSet() }
+                updateTracksUseCase.updateTracks(listOf(), tracksToDelete.map { it.path })
             }
         }
     }

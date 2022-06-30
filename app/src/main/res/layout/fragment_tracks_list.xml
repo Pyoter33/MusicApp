@@ -16,7 +16,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".views.TracksListFragment"
+        tools:context=".views.fragments.TracksListFragment"
         android:background="@color/screen_background">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -43,13 +43,18 @@
             <TextView
                 android:id="@+id/textCurrentTrackName"
                 style="@style/TrackText.Bold"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="@{currentTrack.name}"
                 android:textSize="20sp"
                 app:layout_constraintBottom_toTopOf="@+id/textCurrentTrackArtist"
+                app:layout_constraintEnd_toStartOf="@+id/previousButton"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="Track 1" />
@@ -60,10 +65,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:layout_marginBottom="2dp"
                 android:text="@{currentTrack.artist}"
                 android:textSize="18sp"
                 app:layout_constraintBottom_toTopOf="@+id/trackProgressSeekBar"
+                app:layout_constraintEnd_toStartOf="@+id/previousButton"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 tools:text="Artist 1" />
 

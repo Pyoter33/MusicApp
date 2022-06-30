@@ -21,6 +21,9 @@ interface TrackDao{
     @Query("DELETE FROM track WHERE path in (:paths)")
     suspend fun deleteTracks(paths: List<String>)
 
+    @Query("DELETE FROM track")
+    suspend fun deleteAll()
+
     @Transaction
     suspend fun insertAndDeleteInTransaction(tracks: List<Track>, paths: List<String>) {
         insertAll(tracks)

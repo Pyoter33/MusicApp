@@ -1,5 +1,7 @@
 package com.example.musicapp.viewmodels
 
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.media.MediaMetadataRetriever
 import android.util.Log
 import androidx.lifecycle.*
@@ -12,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -36,6 +39,9 @@ class TrackListViewModel @Inject constructor(
     private val _isCurrentPaused = MutableLiveData<Boolean>()
     val isCurrentPaused: LiveData<Boolean> = _isCurrentPaused
 
+    private val _devices = MutableLiveData(listOf<BluetoothDevice>())
+    val devices: LiveData<List<BluetoothDevice>> = _devices
+
     private var currentPosition: Int? = null
     private var trackProgressionJob: Job? = null
 
@@ -49,16 +55,21 @@ class TrackListViewModel @Inject constructor(
     }
 
     fun updateTracks(position: Int) {
-        val a = currentPosition?.let { currentPosition ->
-            trackList.value!![currentPosition].isPlaying = false
+        currentPosition?.let { currentPosition ->
+            trackList.value!![currentPosition].apply {
+                isPlaying = false
+                isPlayingState = false
+            }
             _positionToNotify.value = currentPosition
-
         }
         trackProgressionJob?.run {
             cancel()
         }
         val newCurrentTrack = trackList.value!![position]
-        newCurrentTrack.isPlaying = true
+        newCurrentTrack.apply {
+            isPlaying = true
+            newCurrentTrack.isPlayingState = true
+        }
         _positionToNotify.value = position
         _currentTrack.value = newCurrentTrack
         currentPosition = position
@@ -122,7 +133,7 @@ class TrackListViewModel @Inject constructor(
                         track.author ?: "Unknown",
                         track.length ?: 0,
                         track.path,
-                        track.imageByteArray,
+                        getTrackImage(track),
                         isPlaying
                     )
                 )
@@ -130,6 +141,18 @@ class TrackListViewModel @Inject constructor(
             checkNullPosition()
             return@map newList
         }.asLiveData()
+    }
+
+    private fun getTrackImage(track: Track): ByteArray {
+        val image = if(File(track.path).exists()) {
+            val mmr =MediaMetadataRetriever().apply {
+                setDataSource(track.path)
+            }
+            mmr.embeddedPicture
+        } else {
+            byteArrayOf()
+        }
+        return image ?: byteArrayOf()
     }
 
     private fun checkNullPosition() {
@@ -149,6 +172,10 @@ class TrackListViewModel @Inject constructor(
         }
     }
 
+    fun setTrackProgression(progression: Int) {
+        _trackProgression.value = progression
+    }
+
     private fun setOnStateChangeListener() {
         player.onStateChanged { state ->
             when (state) {
@@ -163,5 +190,13 @@ class TrackListViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun addBluetoothDevice(device: BluetoothDevice) {
+        _devices.value = devices.value!! + listOf(device)
+    }
+
+    fun resetBluetoothDevices() {
+        _devices.value = listOf()
     }
 }

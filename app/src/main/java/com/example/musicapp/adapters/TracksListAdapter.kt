@@ -53,6 +53,10 @@ class TracksListAdapter @Inject constructor() :
             binding.root.setOnClickListener {
                 listener.onClick(adapterPosition)
             }
+            binding.root.setOnLongClickListener{
+                listener.onLongClick(adapterPosition)
+                true
+            }
         }
 
         companion object {
@@ -79,4 +83,5 @@ class TrackDiffUtil : DiffUtil.ItemCallback<ListViewTrack>() {
 
 interface TrackClickListener {
     fun onClick(position: Int)
+    fun onLongClick(position: Int)
 }
