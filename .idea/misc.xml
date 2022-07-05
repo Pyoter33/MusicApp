@@ -6,9 +6,11 @@
         <entry key="..\:/Users/kkaluga/AndroidStudioProjects/MusicApp/app/src/main/res/layout/activity_main.xml" value="0.15572916666666667" />
         <entry key="..\:/Users/kkaluga/AndroidStudioProjects/MusicApp/app/src/main/res/layout/fragment_tracks_list.xml" value="0.15572916666666667" />
         <entry key="..\:/Users/kkaluga/AndroidStudioProjects/MusicApp/app/src/main/res/layout/item_track.xml" value="0.15572916666666667" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/background_device.xml" value="0.3855" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/background_track.xml" value="0.301" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/background_track_playing.xml" value="0.179" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/background_track_selector.xml" value="0.2415" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1695" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/icon_music_note.xml" value="0.2105" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/icon_pause.xml" value="0.2775" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/drawable/icon_play_arrow.xml" value="0.287" />
@@ -19,8 +21,11 @@
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/font/roboto.xml" value="0.31124412141941" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout-land/fragment_track_details.xml" value="0.2" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/activity_main.xml" value="0.15625" />
-        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/fragment_track_details.xml" value="0.264" />
-        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/fragment_tracks_list.xml" value="0.176" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/device_item.xml" value="1.0" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/dialog_devices.xml" value="0.4" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/fragment_track_details.xml" value="0.25" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/fragment_tracks_list.xml" value="0.4" />
+        <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/item_device.xml" value="0.66875" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/item_track.xml" value="0.4" />
         <entry key="..\:/Users/piomarti/AndroidStudioProjects/MusicApp/app/src/main/res/layout/item_track_controller.xml" value="0.264" />
       </map>

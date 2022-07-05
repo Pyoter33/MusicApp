@@ -1,9 +1,15 @@
 package com.example.musicapp.models
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
 data class ListViewTrack(val id: Long, val name: String, val artist: String, val length: Int, val path: String, val imageByteArray: ByteArray, var isPlaying: Boolean = false) {
+    var isPlayingState by mutableStateOf(isPlaying)
+
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (this !== other) return false //problem with tests! recomposition happens when equals returns false!!!!
+        if (javaClass != other.javaClass) return false
 
         other as ListViewTrack
 

@@ -86,7 +86,8 @@ class TrackListViewModelTest {
 
         //then
         assertEquals(expectedSize, viewModel.trackList.getOrAwaitValue().size)
-        assertThat(viewModel.trackList.getOrAwaitValue().first()).isEqualTo(expectedList.first())
+       // assertThat(viewModel.trackList.getOrAwaitValue().first()).isEqualTo(expectedList.first()) not working equals changed
+        assertThat(viewModel.trackList.getOrAwaitValue().first()).isEqualToComparingFieldByFieldRecursively(expectedList.first()) //this works well
     }
 
     @Test
@@ -154,7 +155,9 @@ class TrackListViewModelTest {
 
         //then
         verify(player).initialize(any())
-        assertThat(viewModel.currentTrack.value).isEqualTo(expectedTrack)
+        //assertThat(viewModel.currentTrack.value).isEqualTo(expectedTrack) not working equals changed
+        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(expectedTrack) //this works well
+
         assertEquals(expectedFlowValue, viewModel.trackProgression.value)
         assertEquals(expectedPosition, viewModel.positionToNotify.value)
 
@@ -180,7 +183,8 @@ class TrackListViewModelTest {
         viewModel.playNextTrack()
 
         //then
-        assertThat(viewModel.currentTrack.value).isEqualTo(testViewTrack2)
+        //assertThat(viewModel.currentTrack.value).isEqualTo(testViewTrack2) not working equals changed
+        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(testViewTrack2) //this works well
         assertEquals(expectedPosition, viewModel.positionToNotify.value)
     }
 
@@ -203,9 +207,8 @@ class TrackListViewModelTest {
         viewModel.playNextTrack()
 
         //then
-        assertThat(viewModel.currentTrack.value).isEqualTo(
-            testViewTrack2
-        )
+        //assertThat(viewModel.currentTrack.value).isEqualTo(testViewTrack2) //not working equals changed
+        assertThat(viewModel.currentTrack.value).isEqualToComparingFieldByFieldRecursively(testViewTrack2) //this works well
         assertEquals(expectedPosition, viewModel.positionToNotify.value)
     }
 

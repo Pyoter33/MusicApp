@@ -17,6 +17,7 @@ import com.example.musicapp.models.ListViewTrack
 import com.example.musicapp.musicplayers.ExoMusicPlayerService
 import com.example.musicapp.musicplayers.MusicPlayerStates
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 import javax.inject.Inject
 
 interface ServiceBinder {
@@ -33,6 +34,8 @@ class MusicPlayerService @Inject constructor() : Service() {
         const val TITLE_PLACEHOLDER = "Title"
     }
 
+    private val path =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString()
     private lateinit var artist: String
     private lateinit var title: String
 
@@ -82,15 +85,6 @@ class MusicPlayerService @Inject constructor() : Service() {
         )
     }
 
-    private val reloadTracksIntent by lazy { Intent("android.intent.RELOAD_TRACKS") }
-    private val pendingReloadTracksIntent by lazy {
-        PendingIntent.getBroadcast(
-            this,
-            0,
-            reloadTracksIntent,
-            FLAG_IMMUTABLE
-        )
-    }
 
     private val notificationManager by lazy { getSystemService(NOTIFICATION_SERVICE) as NotificationManager }
 
@@ -118,13 +112,35 @@ class MusicPlayerService @Inject constructor() : Service() {
         setOnTrackChangedListener()
         setOnStateChangeListener()
     }
+
     private val fileObserver =
-        object : FileObserver("${Environment.getExternalStorageDirectory()}/Tracks") {
+        object : FileObserver(path) {
             override fun onEvent(event: Int, path: String?) {
-                if (event == CREATE || event == DELETE) {
-                    pendingReloadTracksIntent.send()
-                    Log.i("reload", "send")
+                when (event) {
+                    CREATE -> {
+                        val reloadTracksIntent = Intent("android.intent.RELOAD_TRACKS")
+                        val pendingReloadTracksIntent =
+                            PendingIntent.getBroadcast(
+                                this@MusicPlayerService,
+                                0,
+                                reloadTracksIntent,
+                                FLAG_IMMUTABLE
+                            )
+                        pendingReloadTracksIntent.send()
+                    }
+                    DELETE -> {
+                        val deleteTracksIntent = Intent("android.intent.DELETE_TRACKS")
+                        val pendingDeleteTracksIntent =
+                            PendingIntent.getBroadcast(
+                                this@MusicPlayerService,
+                                0,
+                                deleteTracksIntent,
+                                FLAG_IMMUTABLE
+                            )
+                        pendingDeleteTracksIntent.send()
+                    }
                 }
+
             }
         }
 
