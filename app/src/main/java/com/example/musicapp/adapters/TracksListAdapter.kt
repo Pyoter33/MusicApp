@@ -3,6 +3,7 @@ package com.example.musicapp.adapters
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -17,7 +18,6 @@ class TracksListAdapter @Inject constructor() :
     ListAdapter<ListViewTrack, TracksListAdapter.TrackViewHolder>(TrackDiffUtil()) {
 
     private lateinit var onItemClickedListener: TrackClickListener
-
     fun onItemClicked(listener: TrackClickListener) {
         onItemClickedListener = listener
     }
@@ -84,4 +84,5 @@ class TrackDiffUtil : DiffUtil.ItemCallback<ListViewTrack>() {
 interface TrackClickListener {
     fun onClick(position: Int)
     fun onLongClick(position: Int)
+    fun onSwipe(position: Int)
 }

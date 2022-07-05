@@ -1,9 +1,7 @@
 package com.example.musicapp.viewmodels
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.media.MediaMetadataRetriever
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.musicapp.models.ListViewTrack
 import com.example.musicapp.musicplayers.ExoMusicPlayer
@@ -39,8 +37,8 @@ class TrackListViewModel @Inject constructor(
     private val _isCurrentPaused = MutableLiveData<Boolean>()
     val isCurrentPaused: LiveData<Boolean> = _isCurrentPaused
 
-    private val _devices = MutableLiveData(listOf<BluetoothDevice>())
-    val devices: LiveData<List<BluetoothDevice>> = _devices
+    private val _availableDevices = MutableLiveData(listOf<BluetoothDevice>())
+    val availableDevices: LiveData<List<BluetoothDevice>> = _availableDevices
 
     private var currentPosition: Int? = null
     private var trackProgressionJob: Job? = null
@@ -193,10 +191,10 @@ class TrackListViewModel @Inject constructor(
     }
 
     fun addBluetoothDevice(device: BluetoothDevice) {
-        _devices.value = devices.value!! + listOf(device)
+        _availableDevices.value = availableDevices.value!! + listOf(device)
     }
 
     fun resetBluetoothDevices() {
-        _devices.value = listOf()
+        _availableDevices.value = listOf()
     }
 }

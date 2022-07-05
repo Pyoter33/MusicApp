@@ -70,6 +70,7 @@ class UpdateTracksViewModel @Inject constructor(
             getTracksUseCase.getTrackList().collect { list ->
                 val tracksToDelete = list.filter { it.path !in listPaths.toSet() }
                 updateTracksUseCase.updateTracks(listOf(), tracksToDelete.map { it.path })
+                coroutineContext.job.cancel()
             }
         }
     }

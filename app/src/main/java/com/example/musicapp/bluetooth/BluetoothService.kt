@@ -58,7 +58,7 @@ class ConnectThread(
 ) : Thread() {
 
     private val mmSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
-        device.createRfcommSocketToServiceRecord(UUID.fromString(uuid))
+        device.createInsecureRfcommSocketToServiceRecord(UUID.fromString(uuid))
     }
 
     override fun run() {
@@ -75,7 +75,7 @@ class ConnectThread(
 }
 
 class ReadThread(
-    private val mmSocket: BluetoothSocket,
+    mmSocket: BluetoothSocket,
     private val handler: BluetoothHandler
 ) : Thread() {
     private val mmInStream: InputStream = mmSocket.inputStream
