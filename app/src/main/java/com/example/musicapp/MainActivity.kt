@@ -1,25 +1,33 @@
 package com.example.musicapp
 
 import android.Manifest
-import android.app.Activity
+import android.app.PendingIntent
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.*
 import android.content.pm.PackageManager
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.*
+import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupActionBarWithNavController
+import com.example.musicapp.models.ListViewTrack
 import com.example.musicapp.services.MusicPlayerService
 import com.example.musicapp.viewmodels.TrackListViewModel
 import com.example.musicapp.viewmodels.UpdateTracksViewModel
+import com.example.musicapp.views.fragments.TrackDetailsFragment
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -92,7 +100,6 @@ class MainActivity : AppCompatActivity() {
 
     private val reloadTracksBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.i("bluetooth", "create")
             updateTracksViewModel.updateTracks(path)
         }
 
@@ -100,17 +107,21 @@ class MainActivity : AppCompatActivity() {
 
     private val deleteTracksBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.i("bluetooth", "delete")
             updateTracksViewModel.deleteTracks(path)
         }
     }
 
-    private val connection: ServiceConnection = object : ServiceConnection {
+    private val connection = object : ServiceConnection {
+        var isConnected = false
+
         override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
             trackListViewModel.registerListener()
+            isConnected = true
+            startTrackFromIntent()
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
+            isConnected = false
             Toast.makeText(this@MainActivity, "Service stopped!", Toast.LENGTH_SHORT).show()
         }
     }
@@ -132,6 +143,10 @@ class MainActivity : AppCompatActivity() {
         val reloadTracksFilter = IntentFilter("android.intent.RELOAD_TRACKS")
         val deleteTracksFilter = IntentFilter("android.intent.DELETE_TRACKS")
 
+        if (connection.isConnected) {
+            startTrackFromIntent()
+        }
+
         registerReceiver(closeActivityBroadcastReceiver, closeActivityFilter)
         registerReceiver(resumePauseBroadcastReceiver, resumePauseFilter)
         registerReceiver(previousTrackBroadcastReceiver, previousTrackFilter)
@@ -140,6 +155,7 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(deleteTracksBroadcastReceiver, deleteTracksFilter)
         startService()
         getBluetoothAdapter()
+
     }
 
     override fun onStart() {
@@ -173,6 +189,56 @@ class MainActivity : AppCompatActivity() {
                 updateTracksViewModel.updateTracks(path)
             }
         }
+    }
+
+    private fun startTrackFromIntent() {
+        val track = intent.data?.let {
+            getIntentTrack(it)
+        }?.let {
+            initializeIntentTrack(it)
+        }
+    }
+
+    private fun getIntentTrack(uri: Uri): ListViewTrack {
+        val mmr = MediaMetadataRetriever()
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        cursor!!.moveToFirst()
+        val idx = cursor.getColumnIndex(MediaStore.Audio.AudioColumns.DATA)
+        val path = cursor.getString(idx)
+        mmr.setDataSource(path)
+        val title =
+            mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: path.split("/")
+                .last().substringBefore('.')
+        val artist =
+            mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: "Unknown"
+        val lengthString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+        val length = Integer.parseInt(lengthString!!)
+        return ListViewTrack(0, title, artist, length, path, mmr.embeddedPicture ?: byteArrayOf())
+    }
+
+    private fun initializeIntentTrack(track: ListViewTrack) {
+        trackListViewModel.updateTrack(track)
+        val fr = TrackDetailsFragment()
+        val fm = supportFragmentManager
+        val fragmentTransaction = fm.beginTransaction()
+        fragmentTransaction.replace(R.id.fragmentContainerView, fr)
+        fragmentTransaction.commit()
+
+       setIntentTrackOnBackPress()
+    }
+
+    private fun setIntentTrackOnBackPress(){
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val closeIntent = Intent("android.intent.CLOSE_ACTIVITY")
+                PendingIntent.getBroadcast(
+                    this@MainActivity,
+                    0,
+                    closeIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                ).send()
+            }
+        })
     }
 
     private fun getBluetoothAdapter() {

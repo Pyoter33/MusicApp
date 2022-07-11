@@ -2,6 +2,7 @@ package com.example.musicapp.viewmodels
 
 import android.bluetooth.BluetoothDevice
 import android.media.MediaMetadataRetriever
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.musicapp.models.ListViewTrack
 import com.example.musicapp.musicplayers.ExoMusicPlayer
@@ -75,6 +76,12 @@ class TrackListViewModel @Inject constructor(
         resumeTrackProgressionJob()
     }
 
+    fun updateTrack(newCurrentTrack: ListViewTrack) {
+        _currentTrack.value = newCurrentTrack
+        player.initialize(newCurrentTrack)
+        resumeTrackProgressionJob()
+    }
+
     fun playNextTrack() {
         currentPosition?.let { currentPosition ->
             val newPosition = currentPosition + 1
@@ -95,14 +102,14 @@ class TrackListViewModel @Inject constructor(
     }
 
     fun resumeTrack() {
-        if(currentPosition != null) {
+        if(currentTrack.value != null) {
             player.onResume()
             resumeTrackProgressionJob()
         }
     }
 
     fun pauseTrack() {
-        if(currentPosition != null) {
+        if(currentTrack.value != null) {
             player.onPause()
             trackProgressionJob?.run {
                 cancel()
@@ -112,6 +119,18 @@ class TrackListViewModel @Inject constructor(
 
     fun seekOnTrack(timeStamp: Int) {
         player.onSeek(timeStamp)
+    }
+
+    fun setTrackProgression(progression: Int) {
+        _trackProgression.value = progression
+    }
+
+    fun addBluetoothDevice(device: BluetoothDevice) {
+        _availableDevices.value = availableDevices.value!! + listOf(device)
+    }
+
+    fun resetBluetoothDevices() {
+        _availableDevices.value = listOf()
     }
 
     private fun getTrackListFromUseCase(): LiveData<List<ListViewTrack>> {
@@ -137,7 +156,7 @@ class TrackListViewModel @Inject constructor(
                 )
             }
             checkNullPosition()
-            return@map newList
+            return@map newList.sortedBy { it.name }
         }.asLiveData()
     }
 
@@ -154,7 +173,7 @@ class TrackListViewModel @Inject constructor(
     }
 
     private fun checkNullPosition() {
-        if(currentPosition == null && currentTrack.value != null) {
+        if(currentPosition == null && currentTrack.value?.isPlaying == true) {
             _currentTrack.value = null
             player.onStop()
         }
@@ -168,10 +187,6 @@ class TrackListViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun setTrackProgression(progression: Int) {
-        _trackProgression.value = progression
     }
 
     private fun setOnStateChangeListener() {
@@ -188,13 +203,5 @@ class TrackListViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun addBluetoothDevice(device: BluetoothDevice) {
-        _availableDevices.value = availableDevices.value!! + listOf(device)
-    }
-
-    fun resetBluetoothDevices() {
-        _availableDevices.value = listOf()
     }
 }

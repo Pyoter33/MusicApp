@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -24,6 +25,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,15 +62,15 @@ class TrackDetailsFragment @Inject constructor() : Fragment(), SeekBar.OnSeekBar
             DataBindingUtil.inflate(inflater, R.layout.fragment_track_details, container, false)
 
         return binding.root
-        return ComposeView(requireContext()).apply {
-            val isDark =
-                resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES
-            setContent {
-                AppTheme(isDarkTheme = isDark) {
-                    TrackDetailsView()
-                }
-            }
-        }
+//        return ComposeView(requireContext()).apply {
+//            val isDark =
+//                resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES
+//            setContent {
+//                AppTheme(isDarkTheme = isDark) {
+//                    TrackDetailsView()
+//                }
+//            }
+//        }
     }
 
     @Composable
@@ -152,7 +155,7 @@ class TrackDetailsFragment @Inject constructor() : Fragment(), SeekBar.OnSeekBar
             color = MaterialTheme.colors.onSecondary
         )
 
-        Text(text = track.name, style = trackText, modifier = Modifier.padding(start = 32.dp))
+        Text(text = track.name, style = trackText, modifier = Modifier.padding(start = 32.dp).semantics { testTag = "TrackInfoName" })
         Text(
             text = track.artist,
             style = trackTextArtist,
@@ -214,7 +217,8 @@ class TrackDetailsFragment @Inject constructor() : Fragment(), SeekBar.OnSeekBar
                 Text(
                     text = SimpleDateFormat("m:ss", Locale.ENGLISH).format(
                         track.length
-                    ), style = trackTextBold
+                    ), style = trackTextBold,
+                    modifier = Modifier.semantics { testTag = "TrackInfoTime" }
                 )
             }
 
@@ -231,7 +235,8 @@ class TrackDetailsFragment @Inject constructor() : Fragment(), SeekBar.OnSeekBar
                 .padding(horizontal = 50.dp, vertical = 8.dp)
         ) {
             IconButton(
-                onClick = { viewModel.playPreviousTrack() }
+                onClick = { viewModel.playPreviousTrack() },
+                Modifier.semantics { testTag = "ButtonPreviousTrack" }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.icon_previous_arrow),
@@ -240,7 +245,8 @@ class TrackDetailsFragment @Inject constructor() : Fragment(), SeekBar.OnSeekBar
                 )
             }
             IconButton(
-                onClick = { if (isCurrentPaused == true) viewModel.resumeTrack() else viewModel.pauseTrack() }
+                onClick = { if (isCurrentPaused == true) viewModel.resumeTrack() else viewModel.pauseTrack() },
+                Modifier.semantics { testTag = "ButtonResumePauseTrack" }
             ) {
                 Icon(
                     painter = painterResource(id = if (isCurrentPaused == true) R.drawable.icon_play_arrow else R.drawable.icon_pause),
@@ -249,7 +255,8 @@ class TrackDetailsFragment @Inject constructor() : Fragment(), SeekBar.OnSeekBar
                 )
             }
             IconButton(
-                onClick = { viewModel.playNextTrack() }
+                onClick = { viewModel.playNextTrack() },
+                Modifier.semantics { testTag = "ButtonNextTrack" }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.icon_next_arrow),
