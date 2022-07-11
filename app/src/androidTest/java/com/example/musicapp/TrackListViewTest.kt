@@ -10,8 +10,6 @@ import com.example.musicapp.adapters.TracksListAdapter
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.hamcrest.core.IsNot.not
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 

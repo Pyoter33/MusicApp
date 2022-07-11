@@ -80,7 +80,6 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.38.1")
     kapt("com.google.dagger:hilt-android-compiler:2.38.1")
 
-    def nav_version = "2.4.2"
     implementation "androidx.navigation:navigation-ui-ktx:2.5.0-alpha04"
 
 
@@ -114,6 +113,9 @@ dependencies {
     // Integration with observables
     implementation("androidx.compose.runtime:runtime-livedata:1.1.1")
     implementation "com.github.skydoves:landscapist-glide:1.5.2"
+    // Test rules and transitive dependencies:
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.1.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.1.1")
 }
 kapt {
     correctErrorTypes = true
