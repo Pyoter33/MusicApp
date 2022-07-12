@@ -1,5 +1,6 @@
 package com.example.musicapp.adapters
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -33,6 +34,7 @@ class BluetoothDevicesListAdapter @Inject constructor() : ListAdapter<BluetoothD
         holder.bind(current)
     }
 
+    @SuppressLint("MissingPermission")
     class BluetoothDeviceViewHolder(
         private val binding: ItemDeviceBinding,
         private val listener: BluetoothDeviceClickListener

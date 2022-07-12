@@ -176,7 +176,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getBluetoothAdapter() {
-        val bluetoothManager = getSystemService(BluetoothManager::class.java)
+        val bluetoothManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getSystemService(BluetoothManager::class.java)
+        } else {
+            getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        }
+
         bluetoothAdapter = bluetoothManager.adapter
     }
 

@@ -1,5 +1,6 @@
 package com.example.musicapp.views.fragments
 
+import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -69,7 +70,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
-
+@SuppressLint("MissingPermission")
 @AndroidEntryPoint
 class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener,
     BluetoothDeviceClickListener {
