@@ -40,6 +40,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.SemanticsPropertyKey
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -149,17 +153,17 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener,
         savedInstanceState: Bundle?
     ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_tracks_list, container, false)
-        //return binding.root
-        return ComposeView(requireContext()).apply {
-            val isDark =
-                resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES
-
-            setContent {
-                AppTheme(isDarkTheme = isDark) {
-                    TrackListView()
-                }
-            }
-        }
+        return binding.root
+//        return ComposeView(requireContext()).apply {
+//            val isDark =
+//                resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES
+//
+//            setContent {
+//                AppTheme(isDarkTheme = isDark) {
+//                    TrackListView()
+//                }
+//            }
+//        }
     }
 
     @Composable
@@ -194,7 +198,6 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener,
         val dismissState = rememberDismissState(initialValue = DismissValue.Default)
         if (dismissState.isDismissed(DismissDirection.EndToStart)) {
             onSwipe(index)
-            Log.i("delete", "dismiss")
         }
 
         SwipeToDismiss(
@@ -307,6 +310,9 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener,
         }
     }
 
+    val DrawableId = SemanticsPropertyKey<Int>("DrawableResId") //for tests
+    var SemanticsPropertyReceiver.drawableId by DrawableId
+
     @Composable
     fun TrackController(track: ListViewTrack) {
         val trackProgression by viewModel.trackProgression.observeAsState()
@@ -333,7 +339,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener,
                 )
                 .clickable {
                     findNavController().navigate(TracksListFragmentDirections.actionTracksListFragmentToTrackDetailsFragment())
-                }
+                }.semantics { testTag = "TrackController" }
         )
         {
             Column {
@@ -353,7 +359,8 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener,
                             text = track.name,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            style = trackTextBold
+                            style = trackTextBold,
+                            modifier = Modifier.semantics { testTag = "TrackControllerName" }
                         )
                         Text(
                             text = track.artist,
@@ -367,7 +374,7 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener,
                     ) {
                         IconButton(
                             onClick = { viewModel.playPreviousTrack() },
-                            Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp)
+                            Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp).semantics { testTag = "ButtonPreviousTrack" }
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.icon_previous_arrow),
@@ -377,17 +384,20 @@ class TracksListFragment @Inject constructor() : Fragment(), TrackClickListener,
                         }
                         IconButton(
                             onClick = { if (isCurrentPaused == true) viewModel.resumeTrack() else viewModel.pauseTrack() },
-                            Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp)
+                            Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp).semantics { testTag = "ButtonResumePause"}
                         ) {
+                            val resource = if (isCurrentPaused == true) R.drawable.icon_play_arrow else R.drawable.icon_pause
+                            Log.i("test", resource.toString())
                             Icon(
-                                painter = painterResource(id = if (isCurrentPaused == true) R.drawable.icon_play_arrow else R.drawable.icon_pause),
-                                contentDescription = "",
-                                tint = MaterialTheme.colors.primary
+                                painter = painterResource(id = resource),
+                                contentDescription = "AAAA",
+                                tint = MaterialTheme.colors.primary,
+                                modifier = Modifier.semantics { drawableId = resource}
                             )
                         }
                         IconButton(
                             onClick = { viewModel.playNextTrack() },
-                            Modifier.padding(start = 4.dp, top = 4.dp, end = 8.dp)
+                            Modifier.padding(start = 4.dp, top = 4.dp, end = 8.dp).semantics { testTag = "ButtonNextTrack" }
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.icon_next_arrow),
