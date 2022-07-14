@@ -3,7 +3,9 @@ package com.example.musicapp
 import android.Manifest
 import android.app.PendingIntent
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothProfile
 import android.content.*
 import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
@@ -111,6 +113,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val headsetPlugBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when(intent!!.extras!!.getInt("state")) {
+                0 -> {
+                    trackListViewModel.pauseTrack()
+                }
+            }
+        }
+    }
+
+    private val bluetoothHeadsetPlugBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when(intent!!.extras!!.get(BluetoothProfile.EXTRA_STATE)) {
+                BluetoothProfile.STATE_DISCONNECTED -> {
+                    trackListViewModel.pauseTrack()
+                }
+            }
+        }
+    }
+
     private val connection = object : ServiceConnection {
         var isConnected = false
 
@@ -142,6 +164,8 @@ class MainActivity : AppCompatActivity() {
         val nextTrackFilter = IntentFilter("android.intent.PLAY_NEXT_TRACK")
         val reloadTracksFilter = IntentFilter("android.intent.RELOAD_TRACKS")
         val deleteTracksFilter = IntentFilter("android.intent.DELETE_TRACKS")
+        val headsetPlugFilter = IntentFilter(Intent.ACTION_HEADSET_PLUG)
+        val bluetoothHeadsetPlugFilter = IntentFilter(ACTION_CONNECTION_STATE_CHANGED)
 
         if (connection.isConnected) {
             startTrackFromIntent()
@@ -153,6 +177,8 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(nextTrackBroadcastReceiver, nextTrackFilter)
         registerReceiver(reloadTracksBroadcastReceiver, reloadTracksFilter)
         registerReceiver(deleteTracksBroadcastReceiver, deleteTracksFilter)
+        registerReceiver(headsetPlugBroadcastReceiver, headsetPlugFilter)
+        registerReceiver(bluetoothHeadsetPlugBroadcastReceiver, bluetoothHeadsetPlugFilter)
         startService()
         getBluetoothAdapter()
 
@@ -171,6 +197,8 @@ class MainActivity : AppCompatActivity() {
         unregisterReceiver(nextTrackBroadcastReceiver)
         unregisterReceiver(reloadTracksBroadcastReceiver)
         unregisterReceiver(deleteTracksBroadcastReceiver)
+        unregisterReceiver(headsetPlugBroadcastReceiver)
+        unregisterReceiver(bluetoothHeadsetPlugBroadcastReceiver)
         unbindService(connection)
     }
 
